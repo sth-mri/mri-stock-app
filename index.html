@@ -83,10 +83,12 @@
     header {
       background: var(--nhs-blue);
       color: #ffffff;
-      padding: 16px;
-      border-radius: 8px;
+      padding: 14px 16px;
+      border-radius: 0;            /* Removes button-like rounded corners */
+      box-shadow: none;             /* Removes the button drop-shadow */
+      border: 1px solid var(--nhs-dark-blue);
+      border-left: 6px solid var(--nhs-dark-blue); /* Clean, flat accent line */
       margin-bottom: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
     header h1 { font-size: 1.3rem; font-weight: 900; }
     header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
