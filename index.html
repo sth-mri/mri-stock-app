@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
   <title>NHS MRI Stock Control & Target Manager</title>
   <style>
+    /* =========================================
+       CSS VARIABLES & THEMES
+       ========================================= */
     :root {
       --nhs-blue: #005eb8;
       --nhs-dark-blue: #003087;
@@ -13,104 +16,109 @@
       --nhs-amber: #b45309;
       --bg-color: #f0f4f5;
       --card-bg: #ffffff;
-      --text-main: #111827;
-      --text-muted: #374151;
-      --border-color: #cbd5e1;
+      --text-main: #000000;
+      --text-muted: #1f2937;
+      --border-color: #94a3b8;
       --input-bg: #ffffff;
       --badge-bg: #e2e8f0;
-      
-      /* Base font scaling */
-      --font-scale: 1;
     }
 
-    /* Dark Room / High Contrast Mode for MRI Console Suites */
-    body.dark-mode {
-      --bg-color: #0f172a;
+    html.dark-mode, body.dark-mode {
+      --bg-color: #0b1120;
       --card-bg: #1e293b;
-      --text-main: #f8fafc;
+      --text-main: #ffffff;
       --text-muted: #cbd5e1;
-      --border-color: #334155;
+      --border-color: #475569;
       --input-bg: #0f172a;
       --badge-bg: #334155;
       --nhs-blue: #38bdf8;
       --nhs-dark-blue: #0284c7;
-      --nhs-green: #22c55e;
-      --nhs-red: #ef4444;
-      --nhs-amber: #f59e0b;
+      --nhs-green: #4ade80;
+      --nhs-red: #f87171;
+      --nhs-amber: #fbbf24;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+
+    /* Root font size is directly scaled by JavaScript */
+    html {
+      font-size: 16px;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
       padding: 12px;
-      line-height: 1.45;
-      font-size: calc(16px * var(--font-scale));
-      transition: background-color 0.2s, color 0.2s;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container { max-width: 680px; margin: 0 auto; }
 
-    /* Accessibility Toolbar */
+    /* =========================================
+       ACCESSIBILITY TOOLBAR
+       ========================================= */
     .a11y-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
-      border: 1px solid var(--border-color);
+      border: 2px solid var(--border-color);
       border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 10px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    .a11y-group { display: flex; align-items: center; gap: 6px; }
-    .a11y-label { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); }
+    .a11y-group { display: flex; align-items: center; gap: 8px; }
+    .a11y-label { font-size: 0.95rem; font-weight: 800; color: var(--text-muted); }
     .a11y-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      padding: 6px 10px;
-      font-weight: bold;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-weight: 900;
       cursor: pointer;
-      min-width: 36px;
-      font-size: 0.85rem;
+      min-width: 44px;
+      font-size: 1rem;
+      touch-action: manipulation;
     }
     .a11y-btn.active {
-      background: var(--nhs-blue);
-      color: white;
-      border-color: var(--nhs-blue);
+      background: var(--nhs-dark-blue);
+      color: #ffffff;
+      border-color: var(--nhs-dark-blue);
     }
 
     header {
       background: var(--nhs-blue);
-      color: white;
+      color: #ffffff;
       padding: 16px;
       border-radius: 8px;
       margin-bottom: 12px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
-    header h1 { font-size: 1.25rem; font-weight: 800; }
-    header p { font-size: 0.85rem; opacity: 0.95; margin-top: 4px; }
+    header h1 { font-size: 1.3rem; font-weight: 900; }
+    header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
 
-    /* Navigation Tabs */
+    /* Tab Switchers */
     .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab-btn {
       flex: 1;
-      padding: 14px 8px;
+      padding: 14px 10px;
       background: var(--card-bg);
       border: 2px solid var(--border-color);
       border-radius: 8px;
-      font-weight: 800;
-      font-size: 0.9rem;
+      font-weight: 900;
+      font-size: 0.95rem;
       cursor: pointer;
       color: var(--text-main);
       text-align: center;
+      touch-action: manipulation;
     }
     .tab-btn.active {
       background: var(--nhs-dark-blue);
-      color: white;
+      color: #ffffff;
       border-color: var(--nhs-dark-blue);
     }
 
@@ -119,23 +127,22 @@
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      border: 2px solid var(--border-color);
     }
 
-    label { font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-main); }
-    
+    label { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main); }
+
     select, input[type="text"], input[type="number"], input[type="search"], textarea {
       width: 100%;
       padding: 12px;
       border-radius: 6px;
-      border: 1.5px solid var(--border-color);
-      font-size: 1rem;
+      border: 2px solid var(--border-color);
+      font-size: 1.05rem;
       background: var(--input-bg);
       color: var(--text-main);
-    }
-    select:focus, input:focus, textarea:focus {
-      outline: 2px solid var(--nhs-blue);
+      font-weight: 700;
+      -webkit-appearance: none;
     }
 
     .search-box {
@@ -143,7 +150,6 @@
       position: sticky;
       top: 10px;
       z-index: 10;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
     }
 
     /* Item Card */
@@ -152,37 +158,36 @@
       border-radius: 8px;
       padding: 14px;
       margin-bottom: 12px;
-      border: 1.5px solid var(--border-color);
+      border: 2px solid var(--border-color);
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .item-title { font-weight: 800; color: var(--nhs-blue); font-size: 1.1rem; }
-    .item-meta { font-size: 0.9rem; color: var(--text-muted); margin-top: 2px; font-weight: 600; }
-    
+    .item-title { font-weight: 900; color: var(--nhs-blue); font-size: 1.15rem; }
+    .item-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; }
+
     .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .badge {
       display: inline-flex;
       align-items: center;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 4px 8px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      padding: 5px 10px;
       border-radius: 6px;
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
+      border: 1.5px solid var(--border-color);
     }
-    .badge-green { background: #dcfce7; color: #14532d; border-color: #86efac; }
-    .badge-blue { background: #dbeafe; color: #1e3a8a; border-color: #93c5fd; }
-    .badge-history { background: #fee2e2; color: #7f1d1d; border-color: #fca5a5; }
+    .badge-green { background: #dcfce7; color: #14532d; border-color: #4ade80; }
+    .badge-blue { background: #dbeafe; color: #1e3a8a; border-color: #60a5fa; }
+    .badge-history { background: #fee2e2; color: #991b1b; border-color: #f87171; }
 
-    body.dark-mode .badge-green { background: #064e3b; color: #a7f3d0; border-color: #047857; }
-    body.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #1d4ed8; }
-    body.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
+    html.dark-mode .badge-green { background: #064e3b; color: #a7f3d0; border-color: #047857; }
+    html.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #2563eb; }
+    html.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
 
-    /* Stepper Controls - 48px Large Touch Target */
+    /* Stepper Controls - 50px Large Touch Targets */
     .counter-control {
       display: flex;
       align-items: center;
@@ -192,31 +197,32 @@
     .counter-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
-      width: 48px;
-      height: 48px;
+      border: 2px solid var(--border-color);
+      width: 52px;
+      height: 52px;
       border-radius: 8px;
-      font-size: 1.5rem;
-      font-weight: 800;
+      font-size: 1.8rem;
+      font-weight: 900;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
+      touch-action: manipulation;
     }
     .counter-btn:active { background: var(--border-color); }
     .count-input {
       flex: 1;
-      height: 48px;
+      height: 52px;
       text-align: center;
-      font-size: 1.35rem;
-      font-weight: 800;
+      font-size: 1.4rem;
+      font-weight: 900;
       border: 2px solid var(--border-color);
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text-main);
     }
 
-    /* Target Adjustment Inputs */
+    /* Target Adjustment Grid */
     .edit-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -225,28 +231,29 @@
       background: var(--badge-bg);
       padding: 12px;
       border-radius: 8px;
-      border: 1px dashed var(--border-color);
+      border: 2px dashed var(--border-color);
     }
-    .edit-grid label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
-    .edit-grid input { height: 44px; font-weight: 700; text-align: center; font-size: 1.1rem; }
+    .edit-grid label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
+    .edit-grid input { height: 48px; font-weight: 800; text-align: center; font-size: 1.2rem; }
 
     /* Action Buttons */
     .btn {
       display: block;
       width: 100%;
       background: var(--nhs-blue);
-      color: white;
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       padding: 16px;
-      font-size: 1.05rem;
-      font-weight: 800;
+      font-size: 1.1rem;
+      font-weight: 900;
       cursor: pointer;
       text-align: center;
       margin-top: 12px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      touch-action: manipulation;
     }
-    .btn:active { opacity: 0.9; }
+    .btn:active { opacity: 0.85; }
     .btn-green { background: var(--nhs-green); }
     .btn-amber { background: var(--nhs-amber); }
     .btn-secondary { background: #475569; }
@@ -255,9 +262,9 @@
       display: none;
       text-align: center;
       padding: 24px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--nhs-blue);
-      font-size: 1.1rem;
+      font-size: 1.2rem;
     }
 
     #resultView, #adjustView { display: none; }
@@ -265,30 +272,30 @@
       width: 100%;
       border-collapse: collapse;
       margin: 15px 0;
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
     .outlook-table th, .outlook-table td {
       border: 1px solid var(--border-color);
       padding: 10px;
       text-align: left;
     }
-    .outlook-table th { background: var(--badge-bg); color: var(--text-main); }
-    .highlight-qty { color: var(--nhs-red); font-weight: 800; font-size: 1.05rem; }
+    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
+    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Accessibility & Phone Usability Toolbar -->
+  <!-- Accessibility Toolbar -->
   <div class="a11y-bar">
     <div class="a11y-group">
-      <span class="a11y-label">Text Size:</span>
-      <button type="button" class="a11y-btn active" id="fontNormal" onclick="setFontSize('1')">A</button>
-      <button type="button" class="a11y-btn" id="fontLarge" onclick="setFontSize('1.15')">A+</button>
-      <button type="button" class="a11y-btn" id="fontXL" onclick="setFontSize('1.3')">A++</button>
+      <span class="a11y-label">Text:</span>
+      <button type="button" class="a11y-btn active" id="btnFont1" onclick="applyFontSize(16, this)">A</button>
+      <button type="button" class="a11y-btn" id="btnFont2" onclick="applyFontSize(20, this)">A+</button>
+      <button type="button" class="a11y-btn" id="btnFont3" onclick="applyFontSize(24, this)">A++</button>
     </div>
     <div class="a11y-group">
-      <button type="button" class="a11y-btn" id="themeToggleBtn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
     </div>
   </div>
 
@@ -309,7 +316,7 @@
   <div id="countView">
     <div class="card">
       <label for="siteSelect">1. Select Hospital Site:</label>
-      <select id="siteSelect" onchange="handleSiteChange()">
+      <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
         <option value="">-- Choose Site --</option>
         <option value="NGH">Northern General Hospital (NGH)</option>
         <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
@@ -322,7 +329,7 @@
       <input type="text" id="staffName" placeholder="e.g. Sarah Jenkins (Senior MRI Radiographer)">
     </div>
 
-    <!-- Search/Filter Input for fast navigation on mobile -->
+    <!-- Search filter -->
     <div class="search-box" id="searchBoxContainer" style="display:none;">
       <input type="search" id="itemSearch" placeholder="🔍 Filter items (e.g. Dotarem, Saline, Buscopan)..." oninput="filterItems()">
     </div>
@@ -334,10 +341,10 @@
       <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
 
       <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 10px;">
-        <input type="checkbox" id="sendEmailDirect" checked style="width: 24px; height: 24px; margin-top: 2px;">
-        <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.9rem; line-height: 1.3;">
+        <input type="checkbox" id="sendEmailDirect" checked style="width: 26px; height: 26px; margin-top: 2px;">
+        <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.95rem; line-height: 1.3;">
           Send email directly to <strong>emailplaceholder@nhs.net</strong><br>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">(CC: sth.mrisuperintendents@nhs.net)</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">(CC: sth.mrisuperintendents@nhs.net)</span>
         </label>
       </div>
 
@@ -347,14 +354,14 @@
 
   <!-- TAB 2: ADJUST TARGETS -->
   <div id="adjustView">
-    <div class="card" style="border-left: 5px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.1rem; margin-bottom: 6px;">Update Target Baselines</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
-        Edit the <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong> for each item. These values save live into the <code>Usage_MinimumStock</code> tab.
+    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">Update Target Baselines</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
       </p>
 
       <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
-      <select id="adjustSiteSelect" onchange="renderAdjustItems()">
+      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
         <option value="">-- Choose Site --</option>
         <option value="NGH">Northern General Hospital (NGH)</option>
         <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
@@ -376,8 +383,8 @@
 
   <!-- RESULT VIEW -->
   <div id="resultView" class="card">
-    <h2 style="color: var(--nhs-green); font-size: 1.3rem; margin-bottom: 6px;">Stock Ledger Updated</h2>
-    <p id="emailStatusBadge" style="font-size: 0.9rem; margin-bottom: 12px; font-weight: 600;"></p>
+    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
+    <p id="emailStatusBadge" style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700;"></p>
 
     <div id="tableContainer"></div>
 
@@ -394,36 +401,51 @@
   let currentGeneratedOrders = [];
 
   // ==========================================
-  // ACCESSIBILITY & CONTROLS (Font & Dark Mode)
+  // DIRECT ROOT FONT SCALING & DARK MODE
   // ==========================================
-  function setFontSize(scale) {
-    document.documentElement.style.setProperty('--font-scale', scale);
-    localStorage.setItem('NHS_FONT_SCALE', scale);
+  function applyFontSize(px, clickedBtn) {
+    // Directly changes the HTML root font size so all rem units scale instantly
+    document.documentElement.style.fontSize = px + "px";
     
-    document.getElementById('fontNormal').classList.toggle('active', scale === '1');
-    document.getElementById('fontLarge').classList.toggle('active', scale === '1.15');
-    document.getElementById('fontXL').classList.toggle('active', scale === '1.3');
+    document.querySelectorAll('.a11y-btn').forEach(b => {
+      if (b.id.startsWith('btnFont')) b.classList.remove('active');
+    });
+    if (clickedBtn) clickedBtn.classList.add('active');
+
+    try { localStorage.setItem("NHS_FONT_PX", px); } catch(e){}
   }
 
-  function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('NHS_DARK_MODE', isDark ? 'true' : 'false');
-    document.getElementById('themeToggleBtn').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Room';
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark-mode');
+    document.body.classList.toggle('dark-mode', isDark);
+
+    const btn = document.getElementById('themeBtn');
+    btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    btn.classList.toggle('active', isDark);
+
+    try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
   }
 
-  // Load saved visual preferences
-  window.onload = function() {
-    const savedScale = localStorage.getItem('NHS_FONT_SCALE');
-    if (savedScale) setFontSize(savedScale);
+  // Fail-safe init
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const savedPx = localStorage.getItem("NHS_FONT_PX");
+      if (savedPx) {
+        const btnId = savedPx === "24" ? "btnFont3" : savedPx === "20" ? "btnFont2" : "btnFont1";
+        applyFontSize(parseInt(savedPx), document.getElementById(btnId));
+      }
 
-    if (localStorage.getItem('NHS_DARK_MODE') === 'true') {
-      toggleDarkMode();
-    }
+      if (localStorage.getItem("NHS_DARK_THEME") === "1") {
+        toggleTheme();
+      }
+    } catch(e) {}
 
     fetchCatalog();
-  };
+  });
 
+  // ==========================================
+  // VIEW & TAB SWITCHING
+  // ==========================================
   function switchTab(mode) {
     document.getElementById("resultView").style.display = "none";
     if (mode === "count") {
@@ -437,10 +459,28 @@
       document.getElementById("tabCountBtn").classList.remove("active");
       document.getElementById("countView").style.display = "none";
       document.getElementById("adjustView").style.display = "block";
+      
+      // Sync selected site to adjust tab
+      const currentSite = document.getElementById("siteSelect").value;
+      if (currentSite) {
+        document.getElementById("adjustSiteSelect").value = currentSite;
+      }
       renderAdjustItems();
     }
   }
 
+  function handleSiteSelectChange(val) {
+    document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    renderItems();
+  }
+
+  function handleAdjustSiteChange(val) {
+    renderAdjustItems();
+  }
+
+  // ==========================================
+  // API FETCH & RENDER
+  // ==========================================
   async function fetchCatalog() {
     showLoading(true, "Connecting to Google Sheet & fetching catalog...");
     try {
@@ -460,12 +500,6 @@
     }
   }
 
-  function handleSiteChange() {
-    const site = document.getElementById("siteSelect").value;
-    document.getElementById("searchBoxContainer").style.display = site ? "block" : "none";
-    renderItems();
-  }
-
   function filterItems() {
     const query = document.getElementById("itemSearch").value.toLowerCase().trim();
     const cards = document.querySelectorAll("#itemsContainer .item-card");
@@ -476,13 +510,12 @@
     });
   }
 
-  // Render items for counting
   function renderItems() {
     const site = document.getElementById("siteSelect").value;
     const container = document.getElementById("itemsContainer");
     container.innerHTML = "";
 
-    if (!site) return;
+    if (!site || !rawStockData.items) return;
 
     rawStockData.items.forEach((item, index) => {
       const itemName = item.item;
@@ -495,4 +528,296 @@
       let historyText = "No previous record";
       if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
-        historyText
+        historyText = `Last: ${h.value} (${h.date})`;
+      }
+
+      const itemCard = document.createElement("div");
+      itemCard.className = "item-card";
+      itemCard.setAttribute("data-search", `${itemName} ${itemDesc}`);
+      itemCard.innerHTML = `
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        </div>
+        <div class="badge-row">
+          <span class="badge badge-green">Min Target: ${minTarget}</span>
+          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
+          <span class="badge badge-history">${historyText}</span>
+        </div>
+        <div class="counter-control">
+          <button type="button" class="counter-btn" onclick="stepCount(this, -1)">−</button>
+          <input type="number" min="0" class="count-input stock-input" 
+            data-item="${itemName}" 
+            data-desc="${itemDesc}" 
+            data-pack="${packSize}" 
+            data-min-target="${minTarget}"
+            data-weekly-use="${weeklyUse}" 
+            placeholder="Qty">
+          <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
+        </div>
+      `;
+      container.appendChild(itemCard);
+    });
+
+    filterItems();
+  }
+
+  function renderAdjustItems() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    const container = document.getElementById("adjustItemsContainer");
+    const submitCard = document.getElementById("adjustSubmitCard");
+    container.innerHTML = "";
+
+    if (!site || !rawStockData.items) {
+      submitCard.style.display = "none";
+      return;
+    }
+
+    submitCard.style.display = "block";
+
+    rawStockData.items.forEach((item) => {
+      const itemName = item.item;
+      const itemDesc = item.desc;
+      const packSize = item.pack;
+      const weeklyUse = item.weeklyUse[site] || 0;
+      const minTarget = item.minTarget[site] || 0;
+
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.innerHTML = `
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        </div>
+        <div class="edit-grid">
+          <div>
+            <label>Avg Weekly Use:</label>
+            <input type="number" step="any" min="0" class="adjust-weekly-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${weeklyUse}">
+          </div>
+          <div>
+            <label>Min Target Stock:</label>
+            <input type="number" step="any" min="0" class="adjust-min-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${minTarget}">
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // Relative DOM stepper - 100% reliable on phones
+  function stepCount(btn, change) {
+    const input = btn.parentElement.querySelector('.stock-input');
+    if (!input) return;
+    let val = parseFloat(input.value) || 0;
+    val = Math.max(0, val + change);
+    input.value = val;
+  }
+
+  // ==========================================
+  // SUBMISSIONS (Targets & Orders)
+  // ==========================================
+  async function submitBaselineAdjustments() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    if (!site) { alert("Please select a site."); return; }
+
+    const staffName = document.getElementById("adjustStaffName").value.trim();
+    if (!staffName) { alert("Please enter your name/title."); return; }
+
+    const weeklyInputs = document.querySelectorAll(".adjust-weekly-input");
+    const minInputs = document.querySelectorAll(".adjust-min-input");
+    const updates = [];
+
+    for (let i = 0; i < weeklyInputs.length; i++) {
+      updates.push({
+        item: weeklyInputs[i].dataset.item,
+        desc: weeklyInputs[i].dataset.desc,
+        weeklyUse: weeklyInputs[i].value,
+        minTarget: minInputs[i].value
+      });
+    }
+
+    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
+
+    showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "updateBaselines",
+          site: site,
+          staffName: staffName,
+          updates: updates
+        })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        alert(data.message);
+        await fetchCatalog();
+      } else {
+        alert("Failed to update: " + data.message);
+      }
+    } catch (e) {
+      alert("Error saving baselines: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function submitStockForm() {
+    const site = document.getElementById("siteSelect").value;
+    if (!site) { alert("Please select a hospital site."); return; }
+
+    const staffName = document.getElementById("staffName").value.trim();
+    if (!staffName) { alert("Please enter the ordering person's name."); return; }
+
+    const inputs = document.querySelectorAll(".stock-input");
+    const payloadItems = [];
+
+    inputs.forEach(inp => {
+      if (inp.value !== "") {
+        payloadItems.push({
+          item: inp.dataset.item,
+          desc: inp.dataset.desc,
+          pack: inp.dataset.pack,
+          minTarget: inp.dataset.minTarget,
+          weeklyUse: inp.dataset.weeklyUse,
+          current: inp.value
+        });
+      }
+    });
+
+    if (payloadItems.length === 0) {
+      alert("Please enter a stock level count for at least one item.");
+      return;
+    }
+
+    const payload = {
+      action: "submitStockOrder",
+      site: site,
+      staffName: staffName,
+      notes: document.getElementById("orderNotes").value.trim(),
+      sendEmail: document.getElementById("sendEmailDirect").checked,
+      items: payloadItems
+    };
+
+    showLoading(true, "Updating ledger & calculating order...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        currentGeneratedOrders = data.orders;
+        displayResults(data);
+      } else {
+        alert("Failed to process order: " + data.message);
+      }
+    } catch (e) {
+      alert("Error submitting stock count: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function displayResults(data) {
+    document.getElementById("countView").style.display = "none";
+    document.getElementById("adjustView").style.display = "none";
+    document.getElementById("resultView").style.display = "block";
+    document.getElementById("emailStatusBadge").innerText = "Email: " + data.emailStatus;
+
+    let html = "";
+    if (data.orders.length === 0) {
+      html = "<p style='font-size:1.15rem; font-weight:700;'>Stock levels are healthy. No items require ordering.</p>";
+    } else {
+      html += `
+        <table id="orderTablePreview" class="outlook-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Description</th>
+              <th>Pack</th>
+              <th>Order Quantity</th>
+              <th>Count</th>
+              <th>Min Target</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      data.orders.forEach(r => {
+        html += `
+          <tr>
+            <td><strong>${r[0]}</strong></td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td class="highlight-qty">${r[3]}</td>
+            <td>${r[5]}</td>
+            <td>${r[6]}</td>
+          </tr>
+        `;
+      });
+      html += "</tbody></table>";
+    }
+
+    document.getElementById("tableContainer").innerHTML = html;
+  }
+
+  function copyTableToClipboard() {
+    const table = document.getElementById("orderTablePreview");
+    if (!table) { alert("No order table to copy."); return; }
+
+    const range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    try {
+      document.execCommand("copy");
+      alert("Order table copied to clipboard! Paste directly into Outlook.");
+    } catch (err) {
+      alert("Please copy manually from the screen.");
+    }
+    window.getSelection().removeAllRanges();
+  }
+
+  function openMailtoClient() {
+    const site = document.getElementById("siteSelect").value;
+    const recipient = "emailplaceholder@nhs.net";
+    const cc = "sth.mrisuperintendents@nhs.net";
+    const subject = encodeURIComponent(`MRI Stock Order - ${site}`);
+
+    let bodyText = `MRI Stock Replenishment Request\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
+    currentGeneratedOrders.forEach(o => {
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]} [Count: ${o[5]}, Min: ${o[6]}]\n`;
+    });
+    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
+
+    window.location.href = `mailto:${recipient}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+  }
+
+  function showLoading(show, text = "") {
+    const l = document.getElementById("loading");
+    l.innerText = text;
+    l.style.display = show ? "block" : "none";
+  }
+
+  function resetApp() {
+    document.getElementById("resultView").style.display = "none";
+    switchTab('count');
+    fetchCatalog();
+  }
+</script>
+</body>
+</html>
