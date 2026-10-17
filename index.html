@@ -83,9 +83,9 @@
     .a11y-btn:active { background: var(--border-color); }
     
     .a11y-btn.active-settings {
-      background: var(--nhs-amber);
+      background: var(--nhs-blue);
       color: #ffffff;
-      border-color: var(--nhs-amber);
+      border-color: var(--nhs-blue);
     }
 
     /* Flat Header Banner */
@@ -101,6 +101,30 @@
     }
     header h1 { font-size: 1.3rem; font-weight: 900; }
     header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
+
+    /* Top Action Buttons (2/3 and 1/3 split) */
+    .action-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: stretch;
+    }
+    .btn-submit-order {
+      flex: 2; /* 2/3 width */
+      margin-top: 0 !important;
+      padding: 14px 8px !important;
+      font-size: 1rem !important;
+    }
+    .btn-adjust-targets {
+      flex: 1; /* 1/3 width */
+      margin-top: 0 !important;
+      padding: 14px 6px !important;
+      font-size: 0.85rem !important;
+      background: var(--nhs-amber) !important;
+    }
+    .btn-adjust-targets:active {
+      opacity: 0.85;
+    }
 
     .card {
       background: var(--card-bg);
@@ -269,7 +293,7 @@
       font-size: 1.2rem;
     }
 
-    #resultView, #adjustView { display: none; }
+    #resultView, #adjustView, #settingsView { display: none; }
     .outlook-table {
       width: 100%;
       border-collapse: collapse;
@@ -284,9 +308,7 @@
     .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
     .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
 
-    /* =========================================
-       MODAL STYLES (GUIDANCE DIALOG)
-       ========================================= */
+    /* Modal Styles */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -329,7 +351,7 @@
     .modal-body {
       font-size: 1rem;
       line-height: 1.6;
-      white-space: pre-wrap; /* Preserves cell line breaks and indentation */
+      white-space: pre-wrap;
       color: var(--text-main);
       font-weight: 600;
     }
@@ -338,26 +360,26 @@
 <body>
 
 <div class="container">
-  <!-- Accessibility & Controls Toolbar -->
+  <!-- Top Toolbar -->
   <div class="a11y-bar">
-    <!-- 1. Font Size Controls -->
+    <!-- Font Size -->
     <div class="a11y-group">
       <span class="a11y-label">Font:</span>
       <button type="button" class="a11y-btn" onclick="stepFontSize(-2)">−Aa</button>
       <button type="button" class="a11y-btn" onclick="stepFontSize(2)">+Aa</button>
     </div>
 
-    <!-- 2. Settings Button -->
+    <!-- Settings Button (Emails & App Config) -->
     <div class="a11y-group">
       <button type="button" class="a11y-btn" id="topSettingsBtn" onclick="toggleSettingsView()">⚙️ Settings</button>
     </div>
 
-    <!-- 3. Guidance Instructions Button (Placed in between) -->
+    <!-- Guidance Button -->
     <div class="a11y-group">
       <button type="button" class="a11y-btn" id="guidanceBtn" onclick="openGuidanceModal()">ℹ️ Guidance</button>
     </div>
 
-    <!-- 4. Dark/Light Mode -->
+    <!-- Dark/Light Mode -->
     <div class="a11y-group">
       <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
     </div>
@@ -369,9 +391,15 @@
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
 
-  <!-- TAB 1: COUNT & ORDER -->
+  <!-- =========================================
+       VIEW 1: STOCK COUNT & ORDER VIEW
+       ========================================= -->
   <div id="countView">
-    <button type="button" class="btn btn-green" style="margin-bottom: 12px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+    <!-- Action Row: 2/3 Submit Button, 1/3 Adjust Targets Button -->
+    <div class="action-btn-row">
+      <button type="button" class="btn btn-green btn-submit-order" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+      <button type="button" class="btn btn-amber btn-adjust-targets" onclick="switchTab('adjust')">🎯 Adjust Targets</button>
+    </div>
 
     <div class="card">
       <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
@@ -412,15 +440,52 @@
     </div>
   </div>
 
-  <!-- TAB 2: SETTINGS VIEW -->
+  <!-- =========================================
+       VIEW 2: STOCK LEVEL & TARGET ADJUSTMENTS VIEW
+       (Split out via 1/3 button)
+       ========================================= -->
   <div id="adjustView">
     <div style="margin-bottom: 12px;">
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <!-- Email & Guidance Configuration -->
+    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📊 Target Baselines (Usage & Min)</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
+      </p>
+
+      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+
+      <div style="margin-top: 12px;">
+        <label for="adjustStaffName">Superintendent / Editor Name:</label>
+        <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
+      </div>
+    </div>
+
+    <div id="adjustItemsContainer"></div>
+
+    <div class="card" id="adjustSubmitCard" style="display:none;">
+      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
+    </div>
+  </div>
+
+  <!-- =========================================
+       VIEW 3: SETTINGS VIEW (Email & App Config)
+       ========================================= -->
+  <div id="settingsView">
+    <div style="margin-bottom: 12px;">
+      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
+    </div>
+
     <div class="card" style="border-left: 6px solid var(--nhs-blue);">
-      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email & Guidance Configuration</h3>
+      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email Order Configuration</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
         Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
       </p>
@@ -449,7 +514,6 @@
 
       <hr style="border:0; border-top:1px dashed var(--border-color); margin: 15px 0;">
 
-      <!-- Guidance Instructions Configuration (A6 & B6) -->
       <div style="margin-bottom: 10px;">
         <label for="cfgGuidanceHeading">Guidance Heading (Sheet Cell A6):</label>
         <input type="text" id="cfgGuidanceHeading" placeholder="Stock Ordering Guidance">
@@ -462,38 +526,13 @@
 
       <button type="button" class="btn btn-secondary" style="padding:12px; font-size:1rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
     </div>
-
-    <!-- Target Baselines -->
-    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📊 Target Baselines (Usage & Min)</h3>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
-        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
-      </p>
-
-      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
-      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
-        <option value="">-- Choose Site --</option>
-        <option value="NGH">Northern General Hospital (NGH)</option>
-        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
-        <option value="WPH">Weston Park Hospital (WPH)</option>
-      </select>
-
-      <div style="margin-top: 12px;">
-        <label for="adjustStaffName">Superintendent / Editor Name:</label>
-        <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
-      </div>
-    </div>
-
-    <div id="adjustItemsContainer"></div>
-
-    <div class="card" id="adjustSubmitCard" style="display:none;">
-      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
-    </div>
   </div>
 
   <div id="loading" class="loader">Connecting to Google Sheet...</div>
 
-  <!-- RESULT VIEW -->
+  <!-- =========================================
+       VIEW 4: RESULTS VIEW
+       ========================================= -->
   <div id="resultView" class="card">
     <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
     <p id="emailStatusBadge" style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700;"></p>
@@ -506,9 +545,7 @@
   </div>
 </div>
 
-<!-- =========================================
-     POPUP GUIDANCE MODAL (A6 & B6)
-     ========================================= -->
+<!-- Guidance Modal -->
 <div id="guidanceModal" class="modal-backdrop" onclick="closeGuidanceModal(event)">
   <div class="modal-card">
     <div class="modal-header">
@@ -542,9 +579,6 @@
     text: "Loading guidance..."
   };
 
-  // ==========================================
-  // GUIDANCE MODAL CONTROLS
-  // ==========================================
   function openGuidanceModal() {
     document.getElementById("guidanceHeadingText").innerText = guidanceContent.heading;
     document.getElementById("guidanceBodyText").innerText = guidanceContent.text;
@@ -640,13 +674,13 @@
   }
 
   // ==========================================
-  // VIEW SWITCHING VIA TOP TOOLBAR
+  // VIEW SWITCHING
   // ==========================================
   function toggleSettingsView() {
-    if (currentViewMode === "count") {
-      switchTab("adjust");
-    } else {
+    if (currentViewMode === "settings") {
       switchTab("count");
+    } else {
+      switchTab("settings");
     }
   }
 
@@ -655,22 +689,21 @@
     document.getElementById("resultView").style.display = "none";
     const settingsBtn = document.getElementById("topSettingsBtn");
 
-    if (mode === "count") {
-      if (settingsBtn) {
-        settingsBtn.innerText = "⚙️ Settings";
+    document.getElementById("countView").style.display = (mode === "count") ? "block" : "none";
+    document.getElementById("settingsView").style.display = (mode === "settings") ? "block" : "none";
+    document.getElementById("adjustView").style.display = (mode === "adjust") ? "block" : "none";
+
+    if (settingsBtn) {
+      if (mode === "settings") {
+        settingsBtn.classList.add("active-settings");
+      } else {
         settingsBtn.classList.remove("active-settings");
       }
-      document.getElementById("countView").style.display = "block";
-      document.getElementById("adjustView").style.display = "none";
+    }
+
+    if (mode === "count") {
       renderItems();
-    } else {
-      if (settingsBtn) {
-        settingsBtn.innerText = "📦 Stock View";
-        settingsBtn.classList.add("active-settings");
-      }
-      document.getElementById("countView").style.display = "none";
-      document.getElementById("adjustView").style.display = "block";
-      
+    } else if (mode === "adjust") {
       const currentSite = document.getElementById("siteSelect").value;
       if (currentSite) {
         document.getElementById("adjustSiteSelect").value = currentSite;
@@ -1017,6 +1050,7 @@
   function displayResults(data) {
     document.getElementById("countView").style.display = "none";
     document.getElementById("adjustView").style.display = "none";
+    document.getElementById("settingsView").style.display = "none";
     document.getElementById("resultView").style.display = "block";
     document.getElementById("emailStatusBadge").innerText = "Email: " + data.emailStatus;
 
