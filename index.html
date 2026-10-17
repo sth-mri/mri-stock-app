@@ -365,7 +365,7 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Needed urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
 
       <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 10px;">
         <input type="checkbox" id="sendEmailDirect" checked style="width: 26px; height: 26px; margin-top: 2px;">
@@ -743,4 +743,240 @@
     const sub = document.getElementById("cfgEmailSubject").value.trim() || "IV Fluids Stock order {todays date}";
     const body = document.getElementById("cfgEmailBody").value.trim() || "Here is this weeks order for IV Fluids for MRI:";
 
-    showLoading(true, "Saving email conf
+    showLoading(true, "Saving email configuration permanently to Google Sheet...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "updateEmailSettings",
+          toEmail: to,
+          ccEmail: cc,
+          emailSubject: sub,
+          emailBody: body
+        })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        emailSettings = { toEmail: to, ccEmail: cc, emailSubject: sub, emailBody: body };
+        updateEmailUI();
+        alert(data.message);
+      } else {
+        alert("Failed to save: " + data.message);
+      }
+    } catch(e) {
+      alert("Error saving email settings: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ==========================================
+  // BASELINE ADJUSTMENT SUBMISSION
+  // ==========================================
+  async function submitBaselineAdjustments() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    if (!site) { alert("Please select a site."); return; }
+
+    const staffName = document.getElementById("adjustStaffName").value.trim();
+    if (!staffName) { alert("Please enter your name/title."); return; }
+
+    const weeklyInputs = document.querySelectorAll(".adjust-weekly-input");
+    const minInputs = document.querySelectorAll(".adjust-min-input");
+    const updates = [];
+
+    for (let i = 0; i < weeklyInputs.length; i++) {
+      updates.push({
+        item: weeklyInputs[i].dataset.item,
+        desc: weeklyInputs[i].dataset.desc,
+        weeklyUse: weeklyInputs[i].value,
+        minTarget: minInputs[i].value
+      });
+    }
+
+    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
+
+    showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "updateBaselines",
+          site: site,
+          staffName: staffName,
+          updates: updates
+        })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        alert(data.message);
+        await fetchCatalog();
+      } else {
+        alert("Failed to update: " + data.message);
+      }
+    } catch (e) {
+      alert("Error saving baselines: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ==========================================
+  // STOCK ORDER SUBMISSION
+  // ==========================================
+  async function submitStockForm() {
+    if (!requireStaffName()) return;
+
+    const site = document.getElementById("siteSelect").value;
+    if (!site) { alert("Please select a hospital site."); return; }
+
+    const staffName = document.getElementById("staffName").value.trim();
+    const inputs = document.querySelectorAll(".stock-input");
+    const payloadItems = [];
+
+    inputs.forEach(inp => {
+      if (inp.value !== "") {
+        payloadItems.push({
+          item: inp.dataset.item,
+          desc: inp.dataset.desc,
+          pack: inp.dataset.pack,
+          minTarget: inp.dataset.minTarget,
+          weeklyUse: inp.dataset.weeklyUse,
+          current: inp.value
+        });
+      }
+    });
+
+    if (payloadItems.length === 0) {
+      alert("Please enter a stock level count for at least one item.");
+      return;
+    }
+
+    const payload = {
+      action: "submitStockOrder",
+      site: site,
+      staffName: staffName,
+      notes: document.getElementById("orderNotes").value.trim(),
+      sendEmail: document.getElementById("sendEmailDirect").checked,
+      items: payloadItems
+    };
+
+    showLoading(true, "Updating ledger & calculating order...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        currentGeneratedOrders = data.orders;
+        displayResults(data);
+      } else {
+        alert("Failed to process order: " + data.message);
+      }
+    } catch (e) {
+      alert("Error submitting stock count: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function displayResults(data) {
+    document.getElementById("countView").style.display = "none";
+    document.getElementById("adjustView").style.display = "none";
+    document.getElementById("resultView").style.display = "block";
+    document.getElementById("emailStatusBadge").innerText = "Email: " + data.emailStatus;
+
+    let html = "";
+    if (data.orders.length === 0) {
+      html = "<p style='font-size:1.15rem; font-weight:700;'>Stock levels are healthy. No items require ordering.</p>";
+    } else {
+      html += `
+        <table id="orderTablePreview" class="outlook-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Description</th>
+              <th>Pack</th>
+              <th>Order Quantity</th>
+              <th>Count</th>
+              <th>Min Target</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      data.orders.forEach(r => {
+        html += `
+          <tr>
+            <td><strong>${r[0]}</strong></td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td class="highlight-qty">${r[3]}</td>
+            <td>${r[5]}</td>
+            <td>${r[6]}</td>
+          </tr>
+        `;
+      });
+      html += "</tbody></table>";
+    }
+
+    document.getElementById("tableContainer").innerHTML = html;
+  }
+
+  function copyTableToClipboard() {
+    const table = document.getElementById("orderTablePreview");
+    if (!table) { alert("No order table to copy."); return; }
+
+    const range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    try {
+      document.execCommand("copy");
+      alert("Order table copied to clipboard! Paste directly into Outlook.");
+    } catch (err) {
+      alert("Please copy manually from the screen.");
+    }
+    window.getSelection().removeAllRanges();
+  }
+
+  function openMailtoClient() {
+    const site = document.getElementById("siteSelect").value;
+    const todayStr = new Date().toLocaleDateString('en-GB');
+
+    let subject = emailSettings.emailSubject.replace(/\{todays date\}/gi, todayStr)
+                                           .replace(/\{date\}/gi, todayStr)
+                                           .replace(/\{site\}/gi, site);
+
+    let bodyText = `${emailSettings.emailBody}\n\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
+    currentGeneratedOrders.forEach(o => {
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]} [Count: ${o[5]}, Min: ${o[6]}]\n`;
+    });
+    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
+
+    window.location.href = `mailto:${emailSettings.toEmail}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+  }
+
+  function showLoading(show, text = "") {
+    const l = document.getElementById("loading");
+    l.innerText = text;
+    l.style.display = show ? "block" : "none";
+  }
+
+  function resetApp() {
+    document.getElementById("resultView").style.display = "none";
+    switchTab('count');
+    fetchCatalog();
+  }
+</script>
+</body>
+</html>
