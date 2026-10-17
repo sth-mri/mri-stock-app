@@ -56,15 +56,6 @@
       background: #fff;
     }
 
-    .config-box {
-      font-size: 0.8rem;
-      background: #fff8e1;
-      border: 1px solid #ffe082;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 12px;
-    }
-
     .item-card {
       background: white;
       border-radius: 8px;
@@ -169,13 +160,6 @@
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
 
-  <!-- Apps Script API URL Config -->
-  <div class="config-box" id="apiUrlBanner">
-    <label for="apiUrlInput"><strong>Apps Script Web App URL:</strong></label>
-    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec">
-    <button class="btn btn-secondary" style="padding:6px; font-size:0.75rem; margin-top:6px;" onclick="saveApiUrl()">Save URL</button>
-  </div>
-
   <div id="loading" class="loader">Connecting to Google Sheet & loading stock list...</div>
 
   <!-- ENTRY VIEW -->
@@ -226,25 +210,18 @@
 </div>
 
 <script>
-  // ============================================================
-  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
-  // (Ensure it ends in /exec)
-  // ============================================================
-  const API_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE"; 
+  // Hardcoded Apps Script Web App Endpoint
+  const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
   let rawStockData = { items: [], lastStock: {} };
   let currentGeneratedOrders = [];
 
-  // Automatically fetch stock list on page load
+  // Automatically fetch stock catalog on startup
   window.onload = function() {
-    if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT_URL_HERE")) {
-      alert("Please specify your Google Apps Script URL in index.html");
-      return;
-    }
     fetchCatalog();
   };
 
-  // Fetch Items & History from Apps Script
+  // Fetch items & history from Google Sheets
   async function fetchCatalog() {
     showLoading(true, "Connecting to Google Sheet & fetching items...");
     try {
@@ -260,7 +237,7 @@
         alert("Server error: " + data.message);
       }
     } catch (e) {
-      alert("Error loading Google Sheet data: " + e.message + "\n\nVerify that the Web App deployment is set to 'Anyone' access.");
+      alert("Error loading Google Sheet data: " + e.message + "\n\nVerify that the Web App deployment access is set to 'Anyone'.");
     } finally {
       showLoading(false);
     }
@@ -327,7 +304,7 @@
     input.value = val;
   }
 
-  // Submit counts to backend
+  // Submit counts to Google Apps Script
   async function submitStockForm() {
     const site = document.getElementById("siteSelect").value;
     if (!site) { alert("Please select a hospital site."); return; }
@@ -363,10 +340,9 @@
       items: payloadItems
     };
 
-    showLoading(true, "Saving stock to Google Sheet & sending order...");
+    showLoading(true, "Saving stock to Google Sheet & processing order...");
 
     try {
-      // POST with text/plain prevents CORS preflight OPTIONS blocking in GAS
       const res = await fetch(API_URL, {
         method: "POST",
         redirect: "follow",
@@ -469,6 +445,5 @@
     fetchCatalog();
   }
 </script>
-  
 </body>
 </html>
