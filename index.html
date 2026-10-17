@@ -2,29 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NHS MRI Stock Control & Order</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+  <title>NHS MRI Stock Control & Target Manager</title>
   <style>
     :root {
       --nhs-blue: #005eb8;
       --nhs-dark-blue: #003087;
       --nhs-green: #007f3b;
       --nhs-red: #d5281b;
-      --nhs-pale-grey: #f0f4f5;
-      --border-color: #d8dde0;
-      --text-color: #212b32;
+      --nhs-amber: #b45309;
+      --bg-color: #f0f4f5;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #374151;
+      --border-color: #cbd5e1;
+      --input-bg: #ffffff;
+      --badge-bg: #e2e8f0;
+      
+      /* Base font scaling */
+      --font-scale: 1;
+    }
+
+    /* Dark Room / High Contrast Mode for MRI Console Suites */
+    body.dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --border-color: #334155;
+      --input-bg: #0f172a;
+      --badge-bg: #334155;
+      --nhs-blue: #38bdf8;
+      --nhs-dark-blue: #0284c7;
+      --nhs-green: #22c55e;
+      --nhs-red: #ef4444;
+      --nhs-amber: #f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--nhs-pale-grey);
-      color: var(--text-color);
+      background-color: var(--bg-color);
+      color: var(--text-main);
       padding: 12px;
-      line-height: 1.4;
+      line-height: 1.45;
+      font-size: calc(16px * var(--font-scale));
+      transition: background-color 0.2s, color 0.2s;
     }
 
     .container { max-width: 680px; margin: 0 auto; }
+
+    /* Accessibility Toolbar */
+    .a11y-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .a11y-group { display: flex; align-items: center; gap: 6px; }
+    .a11y-label { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); }
+    .a11y-btn {
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-weight: bold;
+      cursor: pointer;
+      min-width: 36px;
+      font-size: 0.85rem;
+    }
+    .a11y-btn.active {
+      background: var(--nhs-blue);
+      color: white;
+      border-color: var(--nhs-blue);
+    }
 
     header {
       background: var(--nhs-blue);
@@ -32,144 +89,227 @@
       padding: 16px;
       border-radius: 8px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
-    header h1 { font-size: 1.25rem; font-weight: 700; }
-    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+    header h1 { font-size: 1.25rem; font-weight: 800; }
+    header p { font-size: 0.85rem; opacity: 0.95; margin-top: 4px; }
+
+    /* Navigation Tabs */
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tab-btn {
+      flex: 1;
+      padding: 14px 8px;
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: var(--text-main);
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: var(--nhs-dark-blue);
+      color: white;
+      border-color: var(--nhs-dark-blue);
+    }
 
     .card {
-      background: white;
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    label { font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 6px; color: var(--text-main); }
+    
+    select, input[type="text"], input[type="number"], input[type="search"], textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border-color);
+      font-size: 1rem;
+      background: var(--input-bg);
+      color: var(--text-main);
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: 2px solid var(--nhs-blue);
+    }
+
+    .search-box {
+      margin-bottom: 12px;
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Item Card */
+    .item-card {
+      background: var(--card-bg);
       border-radius: 8px;
       padding: 14px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      border: 1px solid var(--border-color);
-    }
-
-    label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px; }
-    select, input[type="text"], textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      font-size: 1rem;
-      background: #fff;
-    }
-
-    .item-card {
-      background: white;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border-color);
+      border: 1.5px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .item-title { font-weight: 700; color: var(--nhs-dark-blue); font-size: 0.95rem; }
-    .item-meta { font-size: 0.8rem; color: #555; margin-top: 2px; }
+    .item-title { font-weight: 800; color: var(--nhs-blue); font-size: 1.1rem; }
+    .item-meta { font-size: 0.9rem; color: var(--text-muted); margin-top: 2px; font-weight: 600; }
     
-    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .badge {
-      display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 3px 6px;
-      border-radius: 4px;
-      background: #e8edee;
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
     }
-    .badge-green { background: #e6f4ea; color: #137333; }
-    .badge-blue { background: #e8f0fe; color: var(--nhs-blue); }
-    .badge-history { background: #fce8e6; color: var(--nhs-red); }
+    .badge-green { background: #dcfce7; color: #14532d; border-color: #86efac; }
+    .badge-blue { background: #dbeafe; color: #1e3a8a; border-color: #93c5fd; }
+    .badge-history { background: #fee2e2; color: #7f1d1d; border-color: #fca5a5; }
 
+    body.dark-mode .badge-green { background: #064e3b; color: #a7f3d0; border-color: #047857; }
+    body.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #1d4ed8; }
+    body.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
+
+    /* Stepper Controls - 48px Large Touch Target */
     .counter-control {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 6px;
+      gap: 10px;
+      margin-top: 4px;
     }
     .counter-btn {
-      background: #e8edee;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 6px;
-      font-size: 1.3rem;
-      font-weight: bold;
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      font-weight: 800;
       cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .counter-btn:active { background: #ccd6d9; }
+    .counter-btn:active { background: var(--border-color); }
     .count-input {
       flex: 1;
-      height: 40px;
+      height: 48px;
       text-align: center;
-      font-size: 1.15rem;
-      font-weight: bold;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-main);
     }
 
+    /* Target Adjustment Inputs */
+    .edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+      background: var(--badge-bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px dashed var(--border-color);
+    }
+    .edit-grid label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+    .edit-grid input { height: 44px; font-weight: 700; text-align: center; font-size: 1.1rem; }
+
+    /* Action Buttons */
     .btn {
       display: block;
       width: 100%;
       background: var(--nhs-blue);
       color: white;
       border: none;
-      border-radius: 6px;
-      padding: 14px;
-      font-size: 1rem;
-      font-weight: bold;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
       cursor: pointer;
       text-align: center;
-      margin-top: 10px;
+      margin-top: 12px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
-    .btn:active { background: var(--nhs-dark-blue); }
+    .btn:active { opacity: 0.9; }
     .btn-green { background: var(--nhs-green); }
-    .btn-green:active { background: #005a29; }
-    .btn-secondary { background: #425563; }
+    .btn-amber { background: var(--nhs-amber); }
+    .btn-secondary { background: #475569; }
 
     .loader {
       display: none;
       text-align: center;
-      padding: 20px;
-      font-weight: 600;
+      padding: 24px;
+      font-weight: 700;
       color: var(--nhs-blue);
+      font-size: 1.1rem;
     }
 
-    #resultView { display: none; }
+    #resultView, #adjustView { display: none; }
     .outlook-table {
       width: 100%;
       border-collapse: collapse;
       margin: 15px 0;
-      font-size: 0.85rem;
+      font-size: 0.95rem;
     }
     .outlook-table th, .outlook-table td {
-      border: 1px solid #d8dde0;
-      padding: 8px;
+      border: 1px solid var(--border-color);
+      padding: 10px;
       text-align: left;
     }
-    .outlook-table th { background: #f0f4f5; }
-    .highlight-qty { color: var(--nhs-red); font-weight: bold; }
+    .outlook-table th { background: var(--badge-bg); color: var(--text-main); }
+    .highlight-qty { color: var(--nhs-red); font-weight: 800; font-size: 1.05rem; }
   </style>
 </head>
 <body>
 
 <div class="container">
+  <!-- Accessibility & Phone Usability Toolbar -->
+  <div class="a11y-bar">
+    <div class="a11y-group">
+      <span class="a11y-label">Text Size:</span>
+      <button type="button" class="a11y-btn active" id="fontNormal" onclick="setFontSize('1')">A</button>
+      <button type="button" class="a11y-btn" id="fontLarge" onclick="setFontSize('1.15')">A+</button>
+      <button type="button" class="a11y-btn" id="fontXL" onclick="setFontSize('1.3')">A++</button>
+    </div>
+    <div class="a11y-group">
+      <button type="button" class="a11y-btn" id="themeToggleBtn" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+    </div>
+  </div>
+
   <header>
     <h1>STH MRI Consumables & IV Stock</h1>
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
 
-  <div id="loading" class="loader">Connecting to Google Sheet & fetching latest catalog...</div>
+  <!-- Top View Switcher -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabCountBtn" onclick="switchTab('count')">📦 Stock Count & Order</button>
+    <button class="tab-btn" id="tabAdjustBtn" onclick="switchTab('adjust')">⚙️ Adjust Targets & Usage</button>
+  </div>
 
-  <!-- ENTRY VIEW -->
-  <div id="entryView">
+  <div id="loading" class="loader">Connecting to Google Sheet...</div>
+
+  <!-- TAB 1: COUNT & ORDER -->
+  <div id="countView">
     <div class="card">
       <label for="siteSelect">1. Select Hospital Site:</label>
-      <select id="siteSelect" onchange="renderItems()">
+      <select id="siteSelect" onchange="handleSiteChange()">
         <option value="">-- Choose Site --</option>
         <option value="NGH">Northern General Hospital (NGH)</option>
         <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
@@ -182,16 +322,22 @@
       <input type="text" id="staffName" placeholder="e.g. Sarah Jenkins (Senior MRI Radiographer)">
     </div>
 
+    <!-- Search/Filter Input for fast navigation on mobile -->
+    <div class="search-box" id="searchBoxContainer" style="display:none;">
+      <input type="search" id="itemSearch" placeholder="🔍 Filter items (e.g. Dotarem, Saline, Buscopan)..." oninput="filterItems()">
+    </div>
+
     <div id="itemsContainer"></div>
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Next-day delivery requested for neuro MRI list"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
 
-      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="sendEmailDirect" checked style="width: 18px; height: 18px;">
-        <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.85rem;">
-          Send order email to <strong>emailplaceholder@nhs.net</strong> (CC: <strong>sth.mrisuperintendents@nhs.net</strong>)
+      <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 10px;">
+        <input type="checkbox" id="sendEmailDirect" checked style="width: 24px; height: 24px; margin-top: 2px;">
+        <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.9rem; line-height: 1.3;">
+          Send email directly to <strong>emailplaceholder@nhs.net</strong><br>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">(CC: sth.mrisuperintendents@nhs.net)</span>
         </label>
       </div>
 
@@ -199,10 +345,39 @@
     </div>
   </div>
 
+  <!-- TAB 2: ADJUST TARGETS -->
+  <div id="adjustView">
+    <div class="card" style="border-left: 5px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.1rem; margin-bottom: 6px;">Update Target Baselines</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+        Edit the <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong> for each item. These values save live into the <code>Usage_MinimumStock</code> tab.
+      </p>
+
+      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+      <select id="adjustSiteSelect" onchange="renderAdjustItems()">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+
+      <div style="margin-top: 12px;">
+        <label for="adjustStaffName">Superintendent / Editor Name:</label>
+        <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
+      </div>
+    </div>
+
+    <div id="adjustItemsContainer"></div>
+
+    <div class="card" id="adjustSubmitCard" style="display:none;">
+      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
+    </div>
+  </div>
+
   <!-- RESULT VIEW -->
   <div id="resultView" class="card">
-    <h2 style="color: var(--nhs-green); font-size: 1.2rem; margin-bottom: 6px;">Stock Ledger Updated</h2>
-    <p id="emailStatusBadge" style="font-size: 0.85rem; margin-bottom: 12px; color: #555;"></p>
+    <h2 style="color: var(--nhs-green); font-size: 1.3rem; margin-bottom: 6px;">Stock Ledger Updated</h2>
+    <p id="emailStatusBadge" style="font-size: 0.9rem; margin-bottom: 12px; font-weight: 600;"></p>
 
     <div id="tableContainer"></div>
 
@@ -213,37 +388,95 @@
 </div>
 
 <script>
-  // Connected Apps Script Web App Endpoint
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
   let rawStockData = { items: [], lastHistory: {} };
   let currentGeneratedOrders = [];
 
+  // ==========================================
+  // ACCESSIBILITY & CONTROLS (Font & Dark Mode)
+  // ==========================================
+  function setFontSize(scale) {
+    document.documentElement.style.setProperty('--font-scale', scale);
+    localStorage.setItem('NHS_FONT_SCALE', scale);
+    
+    document.getElementById('fontNormal').classList.toggle('active', scale === '1');
+    document.getElementById('fontLarge').classList.toggle('active', scale === '1.15');
+    document.getElementById('fontXL').classList.toggle('active', scale === '1.3');
+  }
+
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('NHS_DARK_MODE', isDark ? 'true' : 'false');
+    document.getElementById('themeToggleBtn').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Room';
+  }
+
+  // Load saved visual preferences
   window.onload = function() {
+    const savedScale = localStorage.getItem('NHS_FONT_SCALE');
+    if (savedScale) setFontSize(savedScale);
+
+    if (localStorage.getItem('NHS_DARK_MODE') === 'true') {
+      toggleDarkMode();
+    }
+
     fetchCatalog();
   };
 
+  function switchTab(mode) {
+    document.getElementById("resultView").style.display = "none";
+    if (mode === "count") {
+      document.getElementById("tabCountBtn").classList.add("active");
+      document.getElementById("tabAdjustBtn").classList.remove("active");
+      document.getElementById("countView").style.display = "block";
+      document.getElementById("adjustView").style.display = "none";
+      renderItems();
+    } else {
+      document.getElementById("tabAdjustBtn").classList.add("active");
+      document.getElementById("tabCountBtn").classList.remove("active");
+      document.getElementById("countView").style.display = "none";
+      document.getElementById("adjustView").style.display = "block";
+      renderAdjustItems();
+    }
+  }
+
   async function fetchCatalog() {
-    showLoading(true, "Connecting to Google Sheet...");
+    showLoading(true, "Connecting to Google Sheet & fetching catalog...");
     try {
-      const res = await fetch(API_URL, {
-        method: "GET",
-        redirect: "follow"
-      });
+      const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
       const data = await res.json();
       if (data.status === "success") {
         rawStockData = data;
         renderItems();
+        renderAdjustItems();
       } else {
         alert("Server error: " + data.message);
       }
     } catch (e) {
-      alert("Error loading Google Sheet data: " + e.message + "\nEnsure your Apps Script deployment is updated to a New Version.");
+      alert("Error loading Google Sheet data: " + e.message);
     } finally {
       showLoading(false);
     }
   }
 
+  function handleSiteChange() {
+    const site = document.getElementById("siteSelect").value;
+    document.getElementById("searchBoxContainer").style.display = site ? "block" : "none";
+    renderItems();
+  }
+
+  function filterItems() {
+    const query = document.getElementById("itemSearch").value.toLowerCase().trim();
+    const cards = document.querySelectorAll("#itemsContainer .item-card");
+
+    cards.forEach(card => {
+      const text = card.getAttribute("data-search").toLowerCase();
+      card.style.display = text.includes(query) ? "flex" : "none";
+    });
+  }
+
+  // Render items for counting
   function renderItems() {
     const site = document.getElementById("siteSelect").value;
     const container = document.getElementById("itemsContainer");
@@ -262,191 +495,4 @@
       let historyText = "No previous record";
       if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
-        historyText = `Last: ${h.value} (${h.date} by ${h.staff})`;
-      }
-
-      const itemCard = document.createElement("div");
-      itemCard.className = "item-card";
-      itemCard.innerHTML = `
-        <div class="item-header">
-          <div>
-            <div class="item-title">${itemName}</div>
-            <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
-          </div>
-        </div>
-        <div class="badge-row">
-          <span class="badge badge-green">Min Target: ${minTarget}</span>
-          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
-          <span class="badge badge-history">${historyText}</span>
-        </div>
-        <div class="counter-control">
-          <button type="button" class="counter-btn" onclick="stepCount(${index}, -1)">−</button>
-          <input type="number" min="0" class="count-input stock-input" 
-            id="input_${index}" 
-            data-item="${itemName}" 
-            data-desc="${itemDesc}" 
-            data-pack="${packSize}" 
-            data-min-target="${minTarget}"
-            data-weekly-use="${weeklyUse}" 
-            placeholder="Qty">
-          <button type="button" class="counter-btn" onclick="stepCount(${index}, 1)">+</button>
-        </div>
-      `;
-      container.appendChild(itemCard);
-    });
-  }
-
-  function stepCount(index, change) {
-    const input = document.getElementById(`input_${index}`);
-    let val = parseInt(input.value) || 0;
-    val = Math.max(0, val + change);
-    input.value = val;
-  }
-
-  async function submitStockForm() {
-    const site = document.getElementById("siteSelect").value;
-    if (!site) { alert("Please select a hospital site."); return; }
-
-    const staffName = document.getElementById("staffName").value.trim();
-    if (!staffName) { alert("Please enter the ordering person's name."); return; }
-
-    const inputs = document.querySelectorAll(".stock-input");
-    const payloadItems = [];
-
-    inputs.forEach(inp => {
-      if (inp.value !== "") {
-        payloadItems.push({
-          item: inp.dataset.item,
-          desc: inp.dataset.desc,
-          pack: inp.dataset.pack,
-          minTarget: inp.dataset.minTarget,
-          weeklyUse: inp.dataset.weeklyUse,
-          current: inp.value
-        });
-      }
-    });
-
-    if (payloadItems.length === 0) {
-      alert("Please enter a stock level for at least one item.");
-      return;
-    }
-
-    const payload = {
-      site: site,
-      staffName: staffName,
-      notes: document.getElementById("orderNotes").value.trim(),
-      sendEmail: document.getElementById("sendEmailDirect").checked,
-      items: payloadItems
-    };
-
-    showLoading(true, "Updating ledger & calculating order...");
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        redirect: "follow",
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (data.status === "success") {
-        currentGeneratedOrders = data.orders;
-        displayResults(data);
-      } else {
-        alert("Failed to process order: " + data.message);
-      }
-    } catch (e) {
-      alert("Error submitting stock count: " + e.message);
-    } finally {
-      showLoading(false);
-    }
-  }
-
-  function displayResults(data) {
-    document.getElementById("entryView").style.display = "none";
-    document.getElementById("resultView").style.display = "block";
-    document.getElementById("emailStatusBadge").innerText = "Email: " + data.emailStatus;
-
-    let html = "";
-    if (data.orders.length === 0) {
-      html = "<p><strong>Stock levels are healthy. No items require ordering.</strong></p>";
-    } else {
-      html += `
-        <table id="orderTablePreview" class="outlook-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Description</th>
-              <th>Pack</th>
-              <th>Order Quantity</th>
-              <th>Count</th>
-              <th>Min Target</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      data.orders.forEach(r => {
-        html += `
-          <tr>
-            <td>${r[0]}</td>
-            <td>${r[1]}</td>
-            <td>${r[2]}</td>
-            <td class="highlight-qty">${r[3]}</td>
-            <td>${r[5]}</td>
-            <td>${r[6]}</td>
-          </tr>
-        `;
-      });
-      html += "</tbody></table>";
-    }
-
-    document.getElementById("tableContainer").innerHTML = html;
-  }
-
-  function copyTableToClipboard() {
-    const table = document.getElementById("orderTablePreview");
-    if (!table) { alert("No order table to copy."); return; }
-
-    const range = document.createRange();
-    range.selectNode(table);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-
-    try {
-      document.execCommand("copy");
-      alert("Order table copied to clipboard! Paste directly into Outlook.");
-    } catch (err) {
-      alert("Please copy manually from the screen.");
-    }
-    window.getSelection().removeAllRanges();
-  }
-
-  function openMailtoClient() {
-    const site = document.getElementById("siteSelect").value;
-    const recipient = "emailplaceholder@nhs.net";
-    const cc = "sth.mrisuperintendents@nhs.net";
-    const subject = encodeURIComponent(`MRI Stock Order - ${site}`);
-
-    let bodyText = `MRI Stock Replenishment Request\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
-    currentGeneratedOrders.forEach(o => {
-      bodyText += `- ${o[0]} (${o[1]}): ${o[3]} [Count: ${o[5]}, Min: ${o[6]}]\n`;
-    });
-    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
-
-    window.location.href = `mailto:${recipient}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(bodyText)}`;
-  }
-
-  function showLoading(show, text = "") {
-    const l = document.getElementById("loading");
-    l.innerText = text;
-    l.style.display = show ? "block" : "none";
-  }
-
-  function resetApp() {
-    document.getElementById("resultView").style.display = "none";
-    document.getElementById("entryView").style.display = "block";
-    fetchCatalog();
-  }
-</script>
-</body>
-</html>
+        historyText
