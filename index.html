@@ -449,7 +449,7 @@
     <div id="tableContainer"></div>
 
     <button type="button" class="btn" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
-    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open in email App</button>
     <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
@@ -979,13 +979,22 @@
 
     let bodyText = `${emailSettings.emailBody}\n\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
     currentGeneratedOrders.forEach(o => {
-      // Clean order text: NO [Count: X, Min: Y]
+      // Clean order line: NO [Count: X, Min: Y]
       bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
     });
     bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
 
     const effectiveTo = getEffectiveToEmail(site);
-    window.location.href = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    const mailtoUrl = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+
+    // Mobile-safe link trigger: avoids mobile in-app browser pop-up blocking
+    const tempLink = document.createElement('a');
+    tempLink.href = mailtoUrl;
+    tempLink.target = '_top';
+    tempLink.rel = 'noopener noreferrer';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
   }
 
   function showLoading(show, text = "") {
