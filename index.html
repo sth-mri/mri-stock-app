@@ -6,7 +6,7 @@
   <title>NHS MRI Stock Control & Target Manager</title>
   <style>
     /* =========================================
-       CSS THEMES & VARIABLES
+       THEMES & VARIABLES
        ========================================= */
     :root {
       --nhs-blue: #005eb8;
@@ -147,12 +147,11 @@
       -webkit-appearance: none;
     }
 
-    /* Required Input Visual State */
     .input-required {
       border: 2px solid var(--nhs-red) !important;
       background-color: #fff5f5 !important;
     }
-    body.dark-mode .input-required {
+    html.dark-mode .input-required, body.dark-mode .input-required {
       background-color: #450a0a !important;
     }
 
@@ -167,7 +166,7 @@
       margin-bottom: 12px;
       display: none;
     }
-    body.dark-mode .lock-notice {
+    html.dark-mode .lock-notice, body.dark-mode .lock-notice {
       background: #78350f;
       color: #fef3c7;
       border-color: #f59e0b;
@@ -190,7 +189,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      transition: opacity 0.2s;
     }
 
     .item-title { font-weight: 900; color: var(--nhs-blue); font-size: 1.15rem; }
@@ -216,7 +214,7 @@
     html.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #2563eb; }
     html.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
 
-    /* Stepper Controls */
+    /* Counter Stepper */
     .counter-control {
       display: flex;
       align-items: center;
@@ -367,7 +365,7 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
 
       <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 10px;">
         <input type="checkbox" id="sendEmailDirect" checked style="width: 26px; height: 26px; margin-top: 2px;">
@@ -462,7 +460,6 @@
   let currentGeneratedOrders = [];
   let currentFontPx = 16;
 
-  // Active email configuration
   let emailSettings = {
     toEmail: "tim.jones17@nhs.net, lauren.mills6@nhs.net",
     ccEmail: "sth.mrisuperintendents@nhs.net",
@@ -484,7 +481,7 @@
     document.body.classList.toggle('dark-mode', isDark);
 
     const btn = document.getElementById('themeBtn');
-    btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    if (btn) btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
     try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
   }
 
@@ -497,7 +494,10 @@
       }
 
       if (localStorage.getItem("NHS_DARK_THEME") === "1") {
-        toggleTheme();
+        document.documentElement.classList.add('dark-mode');
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('themeBtn');
+        if (btn) btn.innerText = "☀️ Light Mode";
       }
     } catch(e) {}
 
@@ -534,7 +534,6 @@
     return true;
   }
 
-  // Relative DOM stepper with mandatory name guard
   function stepCount(btn, change) {
     if (!requireStaffName()) return;
 
@@ -673,4 +672,75 @@
           <input type="number" min="0" class="count-input stock-input" 
             data-item="${itemName}" 
             data-desc="${itemDesc}" 
-            data-pack="${packSize}"
+            data-pack="${packSize}" 
+            data-min-target="${minTarget}"
+            data-weekly-use="${weeklyUse}" 
+            placeholder="Qty"
+            onfocus="onStockInputFocus(this)">
+          <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
+        </div>
+      `;
+      container.appendChild(itemCard);
+    });
+
+    filterItems();
+  }
+
+  function renderAdjustItems() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    const container = document.getElementById("adjustItemsContainer");
+    const submitCard = document.getElementById("adjustSubmitCard");
+    container.innerHTML = "";
+
+    if (!site || !rawStockData.items) {
+      submitCard.style.display = "none";
+      return;
+    }
+
+    submitCard.style.display = "block";
+
+    rawStockData.items.forEach((item) => {
+      const itemName = item.item;
+      const itemDesc = item.desc;
+      const packSize = item.pack;
+      const weeklyUse = item.weeklyUse[site] || 0;
+      const minTarget = item.minTarget[site] || 0;
+
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.innerHTML = `
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        </div>
+        <div class="edit-grid">
+          <div>
+            <label>Avg Weekly Use:</label>
+            <input type="number" step="any" min="0" class="adjust-weekly-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${weeklyUse}">
+          </div>
+          <div>
+            <label>Min Target Stock:</label>
+            <input type="number" step="any" min="0" class="adjust-min-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${minTarget}">
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ==========================================
+  // PERMANENT EMAIL SETTINGS SUBMISSION
+  // ==========================================
+  async function saveEmailConfigToSheet() {
+    const to = document.getElementById("cfgToEmail").value.trim() || "tim.jones17@nhs.net, lauren.mills6@nhs.net";
+    const cc = document.getElementById("cfgCcEmail").value.trim() || "sth.mrisuperintendents@nhs.net";
+    const sub = document.getElementById("cfgEmailSubject").value.trim() || "IV Fluids Stock order {todays date}";
+    const body = document.getElementById("cfgEmailBody").value.trim() || "Here is this weeks order for IV Fluids for MRI:";
+
+    showLoading(true, "Saving email conf
