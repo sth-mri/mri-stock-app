@@ -214,7 +214,7 @@
     html.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #2563eb; }
     html.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
 
-    /* Counter Stepper */
+    /* Stepper Controls */
     .counter-control {
       display: flex;
       align-items: center;
@@ -274,7 +274,6 @@
       font-weight: 900;
       cursor: pointer;
       text-align: center;
-      margin-top: 12px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       touch-action: manipulation;
     }
@@ -334,10 +333,11 @@
     <button class="tab-btn btn-settings" id="tabAdjustBtn" onclick="switchTab('adjust')">⚙️ Settings</button>
   </div>
 
-  <div id="loading" class="loader">Connecting to Google Sheet...</div>
-
   <!-- TAB 1: COUNT & ORDER -->
   <div id="countView">
+    <!-- SUBMIT BUTTON MOVED TO TOP -->
+    <button type="button" class="btn btn-green" style="margin-bottom: 12px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+
     <div class="card">
       <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
       <input type="text" id="staffName" placeholder="Your name here..." oninput="handleStaffNameInput()">
@@ -354,7 +354,7 @@
     </div>
 
     <div id="lockNotice" class="lock-notice">
-      🔒 Please enter your Name above to unlock stock level entry.
+      🔒 Please enter your Name & Title above to unlock stock level entry.
     </div>
 
     <div class="search-box" id="searchBoxContainer" style="display:none;">
@@ -365,7 +365,7 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
 
       <div style="margin-top: 14px; display: flex; align-items: flex-start; gap: 10px;">
         <input type="checkbox" id="sendEmailDirect" checked style="width: 26px; height: 26px; margin-top: 2px;">
@@ -374,8 +374,6 @@
           <span style="color: var(--text-muted); font-size: 0.85rem;" id="displayCcEmail">(CC: sth.mrisuperintendents@nhs.net)</span>
         </label>
       </div>
-
-      <button type="button" class="btn btn-green" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
     </div>
   </div>
 
@@ -389,8 +387,9 @@
       </p>
 
       <div style="margin-bottom: 10px;">
-        <label for="cfgToEmail">Primary Recipient Email (To):</label>
+        <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
         <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Note: For RHH and WPH, the To field will automatically remain blank.</span>
       </div>
 
       <div style="margin-bottom: 10px;">
@@ -440,6 +439,8 @@
     </div>
   </div>
 
+  <div id="loading" class="loader">Connecting to Google Sheet...</div>
+
   <!-- RESULT VIEW -->
   <div id="resultView" class="card">
     <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
@@ -447,9 +448,9 @@
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
-    <button type="button" class="btn btn-secondary" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
-    <button type="button" class="btn btn-secondary" onclick="resetApp()">↺ Perform Another Stock Count</button>
+    <button type="button" class="btn" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
 
@@ -528,7 +529,7 @@
       staffInput.focus();
       staffInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById("lockNotice").style.display = "block";
-      alert("Please enter the Ordering Person's Name & Title before recording stock levels.");
+      alert("Please enter the Ordering Person's Name before recording stock levels.");
       return false;
     }
     return true;
@@ -576,9 +577,28 @@
     }
   }
 
+  function getEffectiveToEmail(site) {
+    if (site === "RHH" || site === "WPH") {
+      return "";
+    }
+    return emailSettings.toEmail;
+  }
+
   function handleSiteSelectChange(val) {
     document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    updateEmailLabelsForSite(val);
     renderItems();
+  }
+
+  function updateEmailLabelsForSite(site) {
+    const toEmail = getEffectiveToEmail(site);
+    const toLabel = document.getElementById("displayToEmail");
+    
+    if (site === "RHH" || site === "WPH") {
+      toLabel.innerText = "[Blank - Enter recipient in email client]";
+    } else {
+      toLabel.innerText = toEmail || emailSettings.toEmail;
+    }
   }
 
   function handleAdjustSiteChange(val) {
@@ -598,8 +618,11 @@
 
         if (data.emailSettings) {
           emailSettings = data.emailSettings;
-          updateEmailUI();
+          updateSettingsFields();
         }
+
+        const site = document.getElementById("siteSelect").value;
+        updateEmailLabelsForSite(site);
 
         renderItems();
         renderAdjustItems();
@@ -613,10 +636,8 @@
     }
   }
 
-  function updateEmailUI() {
-    document.getElementById("displayToEmail").innerText = emailSettings.toEmail;
+  function updateSettingsFields() {
     document.getElementById("displayCcEmail").innerText = `(CC: ${emailSettings.ccEmail})`;
-
     document.getElementById("cfgToEmail").value = emailSettings.toEmail;
     document.getElementById("cfgCcEmail").value = emailSettings.ccEmail;
     document.getElementById("cfgEmailSubject").value = emailSettings.emailSubject;
@@ -761,7 +782,9 @@
 
       if (data.status === "success") {
         emailSettings = { toEmail: to, ccEmail: cc, emailSubject: sub, emailBody: body };
-        updateEmailUI();
+        updateSettingsFields();
+        const site = document.getElementById("siteSelect").value;
+        updateEmailLabelsForSite(site);
         alert(data.message);
       } else {
         alert("Failed to save: " + data.message);
@@ -863,6 +886,7 @@
       staffName: staffName,
       notes: document.getElementById("orderNotes").value.trim(),
       sendEmail: document.getElementById("sendEmailDirect").checked,
+      toEmail: getEffectiveToEmail(site),
       items: payloadItems
     };
 
@@ -907,8 +931,6 @@
               <th>Description</th>
               <th>Pack</th>
               <th>Order Quantity</th>
-              <th>Count</th>
-              <th>Min Target</th>
             </tr>
           </thead>
           <tbody>
@@ -920,8 +942,6 @@
             <td>${r[1]}</td>
             <td>${r[2]}</td>
             <td class="highlight-qty">${r[3]}</td>
-            <td>${r[5]}</td>
-            <td>${r[6]}</td>
           </tr>
         `;
       });
@@ -959,11 +979,13 @@
 
     let bodyText = `${emailSettings.emailBody}\n\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
     currentGeneratedOrders.forEach(o => {
-      bodyText += `- ${o[0]} (${o[1]}): ${o[3]} [Count: ${o[5]}, Min: ${o[6]}]\n`;
+      // Clean order text: NO [Count: X, Min: Y]
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
     });
     bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
 
-    window.location.href = `mailto:${emailSettings.toEmail}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    const effectiveTo = getEffectiveToEmail(site);
+    window.location.href = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
   }
 
   function showLoading(show, text = "") {
