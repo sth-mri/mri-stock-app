@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NHS MRI Stock Control & Order</title>
+  <style>
+    :root {
+      --nhs-blue: #005eb8;
+      --nhs-dark-blue: #003087;
+      --nhs-green: #007f3b;
+      --nhs-red: #d5281b;
+      --nhs-pale-grey: #f0f4f5;
+      --border-color: #d8dde0;
+      --text-color: #212b32;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--nhs-pale-grey);
+      color: var(--text-color);
+      padding: 12px;
+      line-height: 1.4;
+    }
+
+    .container { max-width: 650px; margin: 0 auto; }
+
+    header {
+      background: var(--nhs-blue);
+      color: white;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-color);
+    }
+
+    label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px; }
+    select, input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    .config-box {
+      font-size: 0.8rem;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .item-card {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .item-title { font-weight: 700; color: var(--nhs-dark-blue); font-size: 0.95rem; }
+    .item-meta { font-size: 0.8rem; color: #555; }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e8edee;
+    }
+    .badge-history { background: #fce8e6; color: var(--nhs-red); }
+
+    .counter-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .counter-btn {
+      background: #e8edee;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .counter-btn:active { background: #ccd6d9; }
+    .count-input {
+      flex: 1;
+      height: 38px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      background: var(--nhs-blue);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .btn:active { background: var(--nhs-dark-blue); }
+    .btn-green { background: var(--nhs-green); }
+    .btn-green:active { background: #005a29; }
+    .btn-secondary { background: #425563; }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      font-weight: 600;
+      color: var(--nhs-blue);
+    }
+
+    /* Results and Outlook Preview */
+    #resultView { display: none; }
+    .outlook-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 0.85rem;
+    }
+    .outlook-table th, .outlook-table td {
+      border: 1px solid #d8dde0;
+      padding: 8px;
+      text-align: left;
+    }
+    .outlook-table th { background: #f0f4f5; }
+    .highlight-qty { color: var(--nhs-red); font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>STH MRI Consumables & IV Stock</h1>
+    <p>Northern General • Royal Hallamshire • Weston Park</p>
+  </header>
+
+  <!-- Apps Script API URL Config -->
+  <div class="config-box" id="apiUrlBanner">
+    <label for="apiUrlInput"><strong>Apps Script Web App URL:</strong></label>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn btn-secondary" style="padding:6px; font-size:0.75rem; margin-top:6px;" onclick="saveApiUrl()">Save URL</button>
+  </div>
+
+  <div id="loading" class="loader">Connecting to Google Sheet & loading stock list...</div>
+
+  <!-- ENTRY VIEW -->
+  <div id="entryView">
+    <div class="card">
+      <label for="siteSelect">1. Select Hospital Site:</label>
+      <select id="siteSelect" onchange="renderItems()">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <label for="staffName">2. Radiographer / Staff Name:</label>
+      <input type="text" id="staffName" placeholder="e.g. J. Smith (Senior Radiographer)">
+    </div>
+
+    <div id="itemsContainer"></div>
+
+    <div class="card">
+      <label for="orderNotes">Optional Order Notes:</label>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent delivery needed for cardiac list on Monday"></textarea>
+
+      <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="sendEmailDirect" checked style="width: 18px; height: 18px;">
+        <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.85rem;">
+          Dispatch email immediately to <strong>emailplaceholder@nhs.net</strong> (CC: <strong>sth.mrisuperintendents@nhs.net</strong>)
+        </label>
+      </div>
+
+      <button type="button" class="btn btn-green" onclick="submitStockForm()">Submit Counts & Generate Order</button>
+    </div>
+  </div>
+
+  <!-- RESULT VIEW -->
+  <div id="resultView" class="card">
+    <h2 style="color: var(--nhs-green); font-size: 1.2rem; margin-bottom: 6px;">Stock Updated & Processed</h2>
+    <p id="emailStatusBadge" style="font-size: 0.85rem; margin-bottom: 12px; color: #555;"></p>
+
+    <div id="tableContainer"></div>
+
+    <button type="button" class="btn" onclick="copyTableToClipboard()">📋 Copy Order for Outlook</button>
+    <button type="button" class="btn btn-secondary" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn btn-secondary" onclick="resetApp()">↺ Perform Another Stock Count</button>
+  </div>
+</div>
+
+<script>
+  let rawStockData = { items: [], lastStock: {} };
+  let currentGeneratedOrders = [];
+
+  // Load backend URL from LocalStorage or default
+  function getApiUrl() {
+    return localStorage.getItem("NHS_STOCK_API_URL") || "";
+  }
+
+  function saveApiUrl() {
+    const url = document.getElementById("apiUrlInput").value.trim();
+    if (!url) { alert("Please provide a valid Apps Script Executable URL."); return; }
+    localStorage.setItem("NHS_STOCK_API_URL", url);
+    alert("Saved! Reloading catalog...");
+    fetchCatalog();
+  }
+
+  window.onload = function() {
+    const savedUrl = getApiUrl();
+    if (savedUrl) {
+      document.getElementById("apiUrlInput").value = savedUrl;
+      document.getElementById("apiUrlBanner").style.display = "none";
+      fetchCatalog();
+    } else {
+      document.getElementById("apiUrlBanner").style.display = "block";
+    }
+  };
+
+  // Fetch Items & History from Apps Script
+  async function fetchCatalog() {
+    const url = getApiUrl();
+    if (!url) return;
+
+    showLoading(true, "Connecting to Google Sheet & fetching items...");
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === "success") {
+        rawStockData = data;
+        renderItems();
+      } else {
+        alert("Server error: " + data.message);
+      }
+    } catch (e) {
+      alert("Error loading Google Sheet data: " + e.message + "\nEnsure Apps Script is deployed to 'Anyone'.");
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function renderItems() {
+    const site = document.getElementById("siteSelect").value;
+    const container = document.getElementById("itemsContainer");
+    container.innerHTML = "";
+
+    if (!site) return;
+
+    const siteColMap = { "NGH": 3, "RHH": 4, "WPH": 5 };
+    const colIdx = siteColMap[site];
+
+    rawStockData.items.forEach((item, index) => {
+      const itemName = item[0];
+      const itemDesc = item[1];
+      const packSize = item[2];
+      const targetMin = item[colIdx] || 0;
+      const fullKey = `${itemName} (${itemDesc})`;
+
+      let historyText = "No previous record";
+      if (rawStockData.lastStock[site] && rawStockData.lastStock[site][fullKey]) {
+        const last = rawStockData.lastStock[site][fullKey];
+        historyText = `Last: ${last.qty} (${last.date})`;
+      }
+
+      const itemCard = document.createElement("div");
+      itemCard.className = "item-card";
+      itemCard.innerHTML = `
+        <div class="item-header">
+          <div>
+            <div class="item-title">${itemName}</div>
+            <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+          </div>
+          <div style="text-align: right;">
+            <span class="badge" style="background:#e6f4ea; color:#137333;">Target: ${targetMin}</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="badge badge-history">${historyText}</span>
+          <div class="counter-control">
+            <button type="button" class="counter-btn" onclick="stepCount(${index}, -1)">−</button>
+            <input type="number" min="0" class="count-input stock-input" 
+              id="input_${index}" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              data-pack="${packSize}" 
+              data-min="${targetMin}" 
+              placeholder="0">
+            <button type="button" class="counter-btn" onclick="stepCount(${index}, 1)">+</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(itemCard);
+    });
+  }
+
+  function stepCount(index, change) {
+    const input = document.getElementById(`input_${index}`);
+    let val = parseInt(input.value) || 0;
+    val = Math.max(0, val + change);
+    input.value = val;
+  }
+
+  // Submit counts to backend
+  async function submitStockForm() {
+    const site = document.getElementById("siteSelect").value;
+    if (!site) { alert("Please select a hospital site."); return; }
+
+    const staffName = document.getElementById("staffName").value.trim();
+    if (!staffName) { alert("Please enter your name/role for the order audit."); return; }
+
+    const inputs = document.querySelectorAll(".stock-input");
+    const payloadItems = [];
+
+    inputs.forEach(inp => {
+      if (inp.value !== "") {
+        payloadItems.push({
+          item: inp.dataset.item,
+          desc: inp.dataset.desc,
+          pack: inp.dataset.pack,
+          min: inp.dataset.min,
+          current: inp.value
+        });
+      }
+    });
+
+    if (payloadItems.length === 0) {
+      alert("Please enter a stock level count for at least one item.");
+      return;
+    }
+
+    const payload = {
+      site: site,
+      staffName: staffName,
+      notes: document.getElementById("orderNotes").value.trim(),
+      sendEmail: document.getElementById("sendEmailDirect").checked,
+      items: payloadItems
+    };
+
+    showLoading(true, "Saving stock to Google Sheet & sending order...");
+
+    try {
+      // POST with text/plain prevents CORS preflight OPTIONS blockage in GAS
+      const res = await fetch(getApiUrl(), {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        currentGeneratedOrders = data.orders;
+        displayResults(data);
+      } else {
+        alert("Failed to save: " + data.message);
+      }
+    } catch (e) {
+      alert("Error submitting stock count: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function displayResults(data) {
+    document.getElementById("entryView").style.display = "none";
+    document.getElementById("resultView").style.display = "block";
+    document.getElementById("emailStatusBadge").innerText = "Email Status: " + data.emailStatus;
+
+    let html = "";
+    if (data.orders.length === 0) {
+      html = "<p><strong>All items are above minimum targets. No order required!</strong></p>";
+    } else {
+      html += `
+        <table id="orderTablePreview" class="outlook-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Description</th>
+              <th>Pack</th>
+              <th>Order Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      data.orders.forEach(row => {
+        html += `
+          <tr>
+            <td>${row[0]}</td>
+            <td>${row[1]}</td>
+            <td>${row[2]}</td>
+            <td class="highlight-qty">${row[3]}</td>
+          </tr>
+        `;
+      });
+      html += "</tbody></table>";
+    }
+
+    document.getElementById("tableContainer").innerHTML = html;
+  }
+
+  function copyTableToClipboard() {
+    const table = document.getElementById("orderTablePreview");
+    if (!table) { alert("No order table to copy."); return; }
+
+    const range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    try {
+      document.execCommand("copy");
+      alert("Table copied! Paste directly into Outlook.");
+    } catch (err) {
+      alert("Please copy manually from the screen.");
+    }
+    window.getSelection().removeAllRanges();
+  }
+
+  function openMailtoClient() {
+    const site = document.getElementById("siteSelect").value;
+    const recipient = "emailplaceholder@nhs.net";
+    const cc = "sth.mrisuperintendents@nhs.net";
+    const subject = encodeURIComponent(`MRI Stock Order - ${site}`);
+
+    let bodyText = `MRI Stock Replenishment Request\nSite: ${site}\n\n`;
+    currentGeneratedOrders.forEach(o => {
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
+    });
+    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
+
+    window.location.href = `mailto:${recipient}?cc=${cc}&subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+  }
+
+  function showLoading(show, text = "") {
+    const l = document.getElementById("loading");
+    l.innerText = text;
+    l.style.display = show ? "block" : "none";
+  }
+
+  function resetApp() {
+    document.getElementById("resultView").style.display = "none";
+    document.getElementById("entryView").style.display = "block";
+    fetchCatalog();
+  }
+</script>
+</body>
+</html>
