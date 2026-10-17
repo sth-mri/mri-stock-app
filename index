@@ -172,7 +172,7 @@
   <!-- Apps Script API URL Config -->
   <div class="config-box" id="apiUrlBanner">
     <label for="apiUrlInput"><strong>Apps Script Web App URL:</strong></label>
-    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec">
     <button class="btn btn-secondary" style="padding:6px; font-size:0.75rem; margin-top:6px;" onclick="saveApiUrl()">Save URL</button>
   </div>
 
