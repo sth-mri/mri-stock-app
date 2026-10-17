@@ -264,6 +264,7 @@
     .edit-grid label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
     .edit-grid input { height: 48px; font-weight: 800; text-align: center; font-size: 1.2rem; }
 
+    /* Button Styles */
     .btn {
       display: block;
       width: 100%;
@@ -283,6 +284,16 @@
     .btn-green { background: var(--nhs-green); }
     .btn-amber { background: var(--nhs-amber); }
     .btn-secondary { background: #475569; }
+
+    /* Light Orange Button Styling */
+    .btn-light-orange {
+      background: #ff9e42 !important;
+      color: #111827 !important;
+      border: 1px solid #f59e0b;
+    }
+    .btn-light-orange:active {
+      background: #f59e0b !important;
+    }
 
     .loader {
       display: none;
@@ -422,7 +433,7 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
     </div>
   </div>
 
@@ -526,9 +537,14 @@
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
-    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
-    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
+    <!-- 1. Open in Phone Email App (Top position, Primary Blue) -->
+    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+
+    <!-- 2. Copy Table for Outlook (Second position, Secondary Grey) -->
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
+
+    <!-- 3. Perform Another Stock Count (Third position, Light Orange) -->
+    <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
 
