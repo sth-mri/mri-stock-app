@@ -226,41 +226,32 @@
 </div>
 
 <script>
+  // ============================================================
+  // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE:
+  // (Ensure it ends in /exec)
+  // ============================================================
+  const API_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE"; 
+
   let rawStockData = { items: [], lastStock: {} };
   let currentGeneratedOrders = [];
 
-  // Load backend URL from LocalStorage or default
-  function getApiUrl() {
-    return localStorage.getItem("NHS_STOCK_API_URL") || "";
-  }
-
-  function saveApiUrl() {
-    const url = document.getElementById("apiUrlInput").value.trim();
-    if (!url) { alert("Please provide a valid Apps Script Executable URL."); return; }
-    localStorage.setItem("NHS_STOCK_API_URL", url);
-    alert("Saved! Reloading catalog...");
-    fetchCatalog();
-  }
-
+  // Automatically fetch stock list on page load
   window.onload = function() {
-    const savedUrl = getApiUrl();
-    if (savedUrl) {
-      document.getElementById("apiUrlInput").value = savedUrl;
-      document.getElementById("apiUrlBanner").style.display = "none";
-      fetchCatalog();
-    } else {
-      document.getElementById("apiUrlBanner").style.display = "block";
+    if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT_URL_HERE")) {
+      alert("Please specify your Google Apps Script URL in index.html");
+      return;
     }
+    fetchCatalog();
   };
 
   // Fetch Items & History from Apps Script
   async function fetchCatalog() {
-    const url = getApiUrl();
-    if (!url) return;
-
     showLoading(true, "Connecting to Google Sheet & fetching items...");
     try {
-      const res = await fetch(url);
+      const res = await fetch(API_URL, {
+        method: "GET",
+        redirect: "follow"
+      });
       const data = await res.json();
       if (data.status === "success") {
         rawStockData = data;
@@ -269,7 +260,7 @@
         alert("Server error: " + data.message);
       }
     } catch (e) {
-      alert("Error loading Google Sheet data: " + e.message + "\nEnsure Apps Script is deployed to 'Anyone'.");
+      alert("Error loading Google Sheet data: " + e.message + "\n\nVerify that the Web App deployment is set to 'Anyone' access.");
     } finally {
       showLoading(false);
     }
@@ -293,7 +284,7 @@
       const fullKey = `${itemName} (${itemDesc})`;
 
       let historyText = "No previous record";
-      if (rawStockData.lastStock[site] && rawStockData.lastStock[site][fullKey]) {
+      if (rawStockData.lastStock && rawStockData.lastStock[site] && rawStockData.lastStock[site][fullKey]) {
         const last = rawStockData.lastStock[site][fullKey];
         historyText = `Last: ${last.qty} (${last.date})`;
       }
@@ -375,9 +366,10 @@
     showLoading(true, "Saving stock to Google Sheet & sending order...");
 
     try {
-      // POST with text/plain prevents CORS preflight OPTIONS blockage in GAS
-      const res = await fetch(getApiUrl(), {
+      // POST with text/plain prevents CORS preflight OPTIONS blocking in GAS
+      const res = await fetch(API_URL, {
         method: "POST",
+        redirect: "follow",
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -477,5 +469,6 @@
     fetchCatalog();
   }
 </script>
+  
 </body>
 </html>
