@@ -24,7 +24,7 @@
       line-height: 1.4;
     }
 
-    .container { max-width: 650px; margin: 0 auto; }
+    .container { max-width: 680px; margin: 0 auto; }
 
     header {
       background: var(--nhs-blue);
@@ -69,39 +69,43 @@
 
     .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .item-title { font-weight: 700; color: var(--nhs-dark-blue); font-size: 0.95rem; }
-    .item-meta { font-size: 0.8rem; color: #555; }
+    .item-meta { font-size: 0.8rem; color: #555; margin-top: 2px; }
+    
+    .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .badge {
       display: inline-block;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      padding: 2px 6px;
+      padding: 3px 6px;
       border-radius: 4px;
       background: #e8edee;
     }
+    .badge-green { background: #e6f4ea; color: #137333; }
+    .badge-blue { background: #e8f0fe; color: var(--nhs-blue); }
     .badge-history { background: #fce8e6; color: var(--nhs-red); }
 
     .counter-control {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 4px;
+      margin-top: 6px;
     }
     .counter-btn {
       background: #e8edee;
       border: none;
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 6px;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: bold;
       cursor: pointer;
     }
     .counter-btn:active { background: #ccd6d9; }
     .count-input {
       flex: 1;
-      height: 38px;
+      height: 40px;
       text-align: center;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: bold;
       border: 1px solid var(--border-color);
       border-radius: 6px;
@@ -135,7 +139,6 @@
       color: var(--nhs-blue);
     }
 
-    /* Results and Outlook Preview */
     #resultView { display: none; }
     .outlook-table {
       width: 100%;
@@ -160,7 +163,7 @@
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
 
-  <div id="loading" class="loader">Connecting to Google Sheet & loading stock list...</div>
+  <div id="loading" class="loader">Connecting to Google Sheet & fetching latest catalog...</div>
 
   <!-- ENTRY VIEW -->
   <div id="entryView">
@@ -175,55 +178,53 @@
     </div>
 
     <div class="card">
-      <label for="staffName">2. Radiographer / Staff Name:</label>
-      <input type="text" id="staffName" placeholder="e.g. J. Smith (Senior Radiographer)">
+      <label for="staffName">2. Ordering Person's Name & Title:</label>
+      <input type="text" id="staffName" placeholder="e.g. Sarah Jenkins (Senior MRI Radiographer)">
     </div>
 
     <div id="itemsContainer"></div>
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent delivery needed for cardiac list on Monday"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Next-day delivery requested for neuro MRI list"></textarea>
 
       <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="sendEmailDirect" checked style="width: 18px; height: 18px;">
         <label for="sendEmailDirect" style="margin-bottom:0; font-size:0.85rem;">
-          Dispatch email immediately to <strong>emailplaceholder@nhs.net</strong> (CC: <strong>sth.mrisuperintendents@nhs.net</strong>)
+          Send order email to <strong>emailplaceholder@nhs.net</strong> (CC: <strong>sth.mrisuperintendents@nhs.net</strong>)
         </label>
       </div>
 
-      <button type="button" class="btn btn-green" onclick="submitStockForm()">Submit Counts & Generate Order</button>
+      <button type="button" class="btn btn-green" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
     </div>
   </div>
 
   <!-- RESULT VIEW -->
   <div id="resultView" class="card">
-    <h2 style="color: var(--nhs-green); font-size: 1.2rem; margin-bottom: 6px;">Stock Updated & Processed</h2>
+    <h2 style="color: var(--nhs-green); font-size: 1.2rem; margin-bottom: 6px;">Stock Ledger Updated</h2>
     <p id="emailStatusBadge" style="font-size: 0.85rem; margin-bottom: 12px; color: #555;"></p>
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" onclick="copyTableToClipboard()">📋 Copy Order for Outlook</button>
+    <button type="button" class="btn" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
     <button type="button" class="btn btn-secondary" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
     <button type="button" class="btn btn-secondary" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
 
 <script>
-  // Hardcoded Apps Script Web App Endpoint
+  // Connected Apps Script Web App Endpoint
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
-  let rawStockData = { items: [], lastStock: {} };
+  let rawStockData = { items: [], lastHistory: {} };
   let currentGeneratedOrders = [];
 
-  // Automatically fetch stock catalog on startup
   window.onload = function() {
     fetchCatalog();
   };
 
-  // Fetch items & history from Google Sheets
   async function fetchCatalog() {
-    showLoading(true, "Connecting to Google Sheet & fetching items...");
+    showLoading(true, "Connecting to Google Sheet...");
     try {
       const res = await fetch(API_URL, {
         method: "GET",
@@ -237,7 +238,7 @@
         alert("Server error: " + data.message);
       }
     } catch (e) {
-      alert("Error loading Google Sheet data: " + e.message + "\n\nVerify that the Web App deployment access is set to 'Anyone'.");
+      alert("Error loading Google Sheet data: " + e.message + "\nEnsure your Apps Script deployment is updated to a New Version.");
     } finally {
       showLoading(false);
     }
@@ -250,20 +251,18 @@
 
     if (!site) return;
 
-    const siteColMap = { "NGH": 3, "RHH": 4, "WPH": 5 };
-    const colIdx = siteColMap[site];
-
     rawStockData.items.forEach((item, index) => {
-      const itemName = item[0];
-      const itemDesc = item[1];
-      const packSize = item[2];
-      const targetMin = item[colIdx] || 0;
-      const fullKey = `${itemName} (${itemDesc})`;
+      const itemName = item.item;
+      const itemDesc = item.desc;
+      const packSize = item.pack;
+      const weeklyUse = item.weeklyUse[site] || 0;
+      const minTarget = item.minTarget[site] || 0;
+      const key = `${site}_${itemName}_${itemDesc}`;
 
       let historyText = "No previous record";
-      if (rawStockData.lastStock && rawStockData.lastStock[site] && rawStockData.lastStock[site][fullKey]) {
-        const last = rawStockData.lastStock[site][fullKey];
-        historyText = `Last: ${last.qty} (${last.date})`;
+      if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
+        const h = rawStockData.lastHistory[key];
+        historyText = `Last: ${h.value} (${h.date} by ${h.staff})`;
       }
 
       const itemCard = document.createElement("div");
@@ -274,23 +273,23 @@
             <div class="item-title">${itemName}</div>
             <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
           </div>
-          <div style="text-align: right;">
-            <span class="badge" style="background:#e6f4ea; color:#137333;">Target: ${targetMin}</span>
-          </div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="badge-row">
+          <span class="badge badge-green">Min Target: ${minTarget}</span>
+          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
           <span class="badge badge-history">${historyText}</span>
-          <div class="counter-control">
-            <button type="button" class="counter-btn" onclick="stepCount(${index}, -1)">−</button>
-            <input type="number" min="0" class="count-input stock-input" 
-              id="input_${index}" 
-              data-item="${itemName}" 
-              data-desc="${itemDesc}" 
-              data-pack="${packSize}" 
-              data-min="${targetMin}" 
-              placeholder="0">
-            <button type="button" class="counter-btn" onclick="stepCount(${index}, 1)">+</button>
-          </div>
+        </div>
+        <div class="counter-control">
+          <button type="button" class="counter-btn" onclick="stepCount(${index}, -1)">−</button>
+          <input type="number" min="0" class="count-input stock-input" 
+            id="input_${index}" 
+            data-item="${itemName}" 
+            data-desc="${itemDesc}" 
+            data-pack="${packSize}" 
+            data-min-target="${minTarget}"
+            data-weekly-use="${weeklyUse}" 
+            placeholder="Qty">
+          <button type="button" class="counter-btn" onclick="stepCount(${index}, 1)">+</button>
         </div>
       `;
       container.appendChild(itemCard);
@@ -304,13 +303,12 @@
     input.value = val;
   }
 
-  // Submit counts to Google Apps Script
   async function submitStockForm() {
     const site = document.getElementById("siteSelect").value;
     if (!site) { alert("Please select a hospital site."); return; }
 
     const staffName = document.getElementById("staffName").value.trim();
-    if (!staffName) { alert("Please enter your name/role for the order audit."); return; }
+    if (!staffName) { alert("Please enter the ordering person's name."); return; }
 
     const inputs = document.querySelectorAll(".stock-input");
     const payloadItems = [];
@@ -321,14 +319,15 @@
           item: inp.dataset.item,
           desc: inp.dataset.desc,
           pack: inp.dataset.pack,
-          min: inp.dataset.min,
+          minTarget: inp.dataset.minTarget,
+          weeklyUse: inp.dataset.weeklyUse,
           current: inp.value
         });
       }
     });
 
     if (payloadItems.length === 0) {
-      alert("Please enter a stock level count for at least one item.");
+      alert("Please enter a stock level for at least one item.");
       return;
     }
 
@@ -340,7 +339,7 @@
       items: payloadItems
     };
 
-    showLoading(true, "Saving stock to Google Sheet & processing order...");
+    showLoading(true, "Updating ledger & calculating order...");
 
     try {
       const res = await fetch(API_URL, {
@@ -354,7 +353,7 @@
         currentGeneratedOrders = data.orders;
         displayResults(data);
       } else {
-        alert("Failed to save: " + data.message);
+        alert("Failed to process order: " + data.message);
       }
     } catch (e) {
       alert("Error submitting stock count: " + e.message);
@@ -366,11 +365,11 @@
   function displayResults(data) {
     document.getElementById("entryView").style.display = "none";
     document.getElementById("resultView").style.display = "block";
-    document.getElementById("emailStatusBadge").innerText = "Email Status: " + data.emailStatus;
+    document.getElementById("emailStatusBadge").innerText = "Email: " + data.emailStatus;
 
     let html = "";
     if (data.orders.length === 0) {
-      html = "<p><strong>All items are above minimum targets. No order required!</strong></p>";
+      html = "<p><strong>Stock levels are healthy. No items require ordering.</strong></p>";
     } else {
       html += `
         <table id="orderTablePreview" class="outlook-table">
@@ -380,17 +379,21 @@
               <th>Description</th>
               <th>Pack</th>
               <th>Order Quantity</th>
+              <th>Count</th>
+              <th>Min Target</th>
             </tr>
           </thead>
           <tbody>
       `;
-      data.orders.forEach(row => {
+      data.orders.forEach(r => {
         html += `
           <tr>
-            <td>${row[0]}</td>
-            <td>${row[1]}</td>
-            <td>${row[2]}</td>
-            <td class="highlight-qty">${row[3]}</td>
+            <td>${r[0]}</td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td class="highlight-qty">${r[3]}</td>
+            <td>${r[5]}</td>
+            <td>${r[6]}</td>
           </tr>
         `;
       });
@@ -411,7 +414,7 @@
 
     try {
       document.execCommand("copy");
-      alert("Table copied! Paste directly into Outlook.");
+      alert("Order table copied to clipboard! Paste directly into Outlook.");
     } catch (err) {
       alert("Please copy manually from the screen.");
     }
@@ -424,9 +427,9 @@
     const cc = "sth.mrisuperintendents@nhs.net";
     const subject = encodeURIComponent(`MRI Stock Order - ${site}`);
 
-    let bodyText = `MRI Stock Replenishment Request\nSite: ${site}\n\n`;
+    let bodyText = `MRI Stock Replenishment Request\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
     currentGeneratedOrders.forEach(o => {
-      bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]} [Count: ${o[5]}, Min: ${o[6]}]\n`;
     });
     bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
 
