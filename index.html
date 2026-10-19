@@ -135,6 +135,24 @@
       border: 2px solid var(--border-color);
     }
 
+    /* Site Last Order Information Banner */
+    .site-history-banner {
+      background: #eff6ff;
+      border: 2px solid #93c5fd;
+      color: #1e3a8a;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: none;
+    }
+    html.dark-mode .site-history-banner, body.dark-mode .site-history-banner {
+      background: #1e3a8a;
+      border-color: #3b82f6;
+      color: #dbeafe;
+    }
+
     label { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main); }
 
     select, input[type="text"], input[type="email"], input[type="number"], input[type="search"], textarea {
@@ -155,6 +173,23 @@
     }
     html.dark-mode .input-required, body.dark-mode .input-required {
       background-color: #450a0a !important;
+    }
+
+    /* Input Plausibility Warning State */
+    .input-warning {
+      border: 2.5px solid var(--nhs-amber) !important;
+      background-color: #fffbeb !important;
+    }
+    html.dark-mode .input-warning, body.dark-mode .input-warning {
+      background-color: #78350f !important;
+    }
+
+    .item-warning-msg {
+      color: var(--nhs-amber);
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-top: 4px;
+      display: none;
     }
 
     .lock-notice {
@@ -434,6 +469,9 @@
       </select>
     </div>
 
+    <!-- Last Order Banner for Selected Site -->
+    <div id="siteHistoryBanner" class="site-history-banner"></div>
+
     <div id="lockNotice" class="lock-notice">
       🔒 Please enter your Name & Title above to unlock stock level entry.
     </div>
@@ -573,7 +611,7 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
-  let rawStockData = { items: [], lastHistory: {} };
+  let rawStockData = { items: [], lastHistory: {}, lastSiteOrder: {} };
   let currentGeneratedOrders = [];
   let currentFontPx = 16;
   let currentViewMode = "count";
@@ -675,6 +713,7 @@
     let val = parseFloat(input.value) || 0;
     val = Math.max(0, val + change);
     input.value = val;
+    validateStockPlausibility(input);
   }
 
   function onStockInputFocus(input) {
@@ -682,6 +721,55 @@
       input.blur();
       requireStaffName();
     }
+  }
+
+  // ==========================================
+  // REAL-TIME STOCK PLAUSIBILITY CHECK
+  // ==========================================
+  function getWeeksElapsedForSite(site) {
+    if (rawStockData.lastSiteOrder && rawStockData.lastSiteOrder[site] && rawStockData.lastSiteOrder[site].isoDate) {
+      const lastDate = new Date(rawStockData.lastSiteOrder[site].isoDate);
+      const diffMs = new Date() - lastDate;
+      const days = Math.max(1, diffMs / (1000 * 60 * 60 * 24));
+      return Math.max(0.5, days / 7);
+    }
+    return 1.0; // Default to 1 week if no prior date
+  }
+
+  function validateStockPlausibility(input) {
+    const card = input.closest('.item-card');
+    const warningDiv = card.querySelector('.item-warning-msg');
+    const valStr = input.value.trim();
+
+    if (valStr === "") {
+      input.classList.remove('input-warning');
+      if (warningDiv) warningDiv.style.display = "none";
+      return true;
+    }
+
+    const enteredVal = parseFloat(valStr);
+    const lastStock = parseFloat(input.dataset.lastStock || "0");
+    const weeklyUse = parseFloat(input.dataset.weeklyUse || "0");
+    const site = document.getElementById("siteSelect").value;
+    const weeksElapsed = getWeeksElapsedForSite(site);
+
+    // Formula: expectedMin = lastStock - (weeklyUse * weeksElapsed * fudgeFactor 2.0)
+    if (lastStock > 0 && weeklyUse > 0) {
+      const expectedMin = Math.max(0, Math.floor(lastStock - (weeklyUse * weeksElapsed * 2.0)));
+
+      if (enteredVal < expectedMin) {
+        input.classList.add('input-warning');
+        if (warningDiv) {
+          warningDiv.innerText = `⚠️ Warning: Count (${enteredVal}) seems unusually low. Based on previous stock (${lastStock}) and usage (~${weeklyUse}/wk), expected ≥ ${expectedMin}. Please double-check!`;
+          warningDiv.style.display = "block";
+        }
+        return false;
+      }
+    }
+
+    input.classList.remove('input-warning');
+    if (warningDiv) warningDiv.style.display = "none";
+    return true;
   }
 
   function toggleSettingsView() {
@@ -729,7 +817,30 @@
 
   function handleSiteSelectChange(val) {
     document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    updateSiteHistoryBanner(val);
     renderItems();
+  }
+
+  function updateSiteHistoryBanner(site) {
+    const banner = document.getElementById("siteHistoryBanner");
+    if (!site) {
+      banner.style.display = "none";
+      return;
+    }
+
+    if (rawStockData.lastSiteOrder && rawStockData.lastSiteOrder[site]) {
+      const h = rawStockData.lastSiteOrder[site];
+      let timeAgo = "";
+      if (h.isoDate) {
+        const days = Math.round((new Date() - new Date(h.isoDate)) / (1000 * 60 * 60 * 24));
+        timeAgo = days === 0 ? " (Today)" : days === 1 ? " (Yesterday)" : ` (${days} days ago)`;
+      }
+      banner.innerHTML = `📅 <strong>Last Order/Count for ${site}:</strong> ${h.date} by <strong>${h.staff}</strong>${timeAgo}`;
+      banner.style.display = "block";
+    } else {
+      banner.innerHTML = `📅 <strong>Last Order/Count for ${site}:</strong> No previous record logged in ledger.`;
+      banner.style.display = "block";
+    }
   }
 
   function handleAdjustSiteChange(val) {
@@ -754,6 +865,9 @@
           document.getElementById("cfgGuidanceHeading").value = guidanceContent.heading;
           document.getElementById("cfgGuidanceText").value = guidanceContent.text;
         }
+
+        const site = document.getElementById("siteSelect").value;
+        updateSiteHistoryBanner(site);
 
         renderItems();
         renderAdjustItems();
@@ -799,15 +913,18 @@
       const minTarget = item.minTarget[site] || 0;
       const key = `${site}_${itemName}_${itemDesc}`;
 
-      // Prioritize current stock column in sheet (Cols J, K, L)
-      const sheetStock = (item.currentStock && item.currentStock[site] !== "") ? item.currentStock[site] : null;
-
+      // Extract current known stock (Columns J, K, L or latest ledger entry)
+      let currentKnownStock = 0;
       let historyText = "No previous record";
-      if (sheetStock !== null) {
-        historyText = `Stock in sheet: ${sheetStock}`;
+
+      if (item.currentStock && item.currentStock[site] !== "") {
+        currentKnownStock = parseFloat(item.currentStock[site]);
+        historyText = `Stock on file: ${currentKnownStock}`;
       } else if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
         historyText = `Last: ${h.value} (${h.date})`;
+        const countMatch = String(h.value).match(/Count:\s*(\d+(\.\d+)?)/i);
+        if (countMatch) currentKnownStock = parseFloat(countMatch[1]);
       }
 
       const itemCard = document.createElement("div");
@@ -831,10 +948,13 @@
             data-pack="${packSize}" 
             data-min-target="${minTarget}"
             data-weekly-use="${weeklyUse}" 
+            data-last-stock="${currentKnownStock}"
             placeholder="Qty"
-            onfocus="onStockInputFocus(this)">
+            onfocus="onStockInputFocus(this)"
+            oninput="validateStockPlausibility(this)">
           <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
         </div>
+        <div class="item-warning-msg"></div>
       `;
       container.appendChild(itemCard);
     });
@@ -842,7 +962,6 @@
     filterItems();
   }
 
-  // 3-Column Render in Adjust Targets (Avg Weekly, Min Target, Actual Stock)
   function renderAdjustItems() {
     const site = document.getElementById("adjustSiteSelect").value;
     const container = document.getElementById("adjustItemsContainer");
@@ -864,7 +983,6 @@
       const minTarget = item.minTarget[site] || 0;
       const key = `${site}_${itemName}_${itemDesc}`;
 
-      // Pull current stock from sheet Columns J, K, L or history
       let currentStockVal = "";
       if (item.currentStock && item.currentStock[site] !== "") {
         currentStockVal = item.currentStock[site];
@@ -1021,6 +1139,7 @@
     const staffName = document.getElementById("staffName").value.trim();
     const inputs = document.querySelectorAll(".stock-input");
     const payloadItems = [];
+    const suspiciousItems = [];
 
     inputs.forEach(inp => {
       if (inp.value !== "") {
@@ -1032,12 +1151,26 @@
           weeklyUse: inp.dataset.weeklyUse,
           current: inp.value
         });
+
+        if (inp.classList.contains('input-warning')) {
+          suspiciousItems.push(`- ${inp.dataset.item} (${inp.dataset.desc}): Count entered is ${inp.value}`);
+        }
       }
     });
 
     if (payloadItems.length === 0) {
       alert("Please enter a stock level count for at least one item.");
       return;
+    }
+
+    // Confirmation if any plausibility warnings are active
+    if (suspiciousItems.length > 0) {
+      const confirmMsg = "⚠️ ATTENTION: The following stock count(s) appear unusually low compared to historical usage:\n\n" +
+                         suspiciousItems.join("\n") +
+                         "\n\nAre you sure you have counted these cupboards correctly?";
+      if (!confirm(confirmMsg)) {
+        return;
+      }
     }
 
     const payload = {
