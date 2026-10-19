@@ -31,26 +31,71 @@
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
     }
 
+/* =========================================
+       SUBDUED, GLARE-FREE DARK ROOM PALETTE
+       ========================================= */
     html.dark-mode, body.dark-mode {
       --bg-color: #0b1120;
       --card-bg: #1e293b;
-      --card-bg-counted: #1e293b;
-      --text-main: #f8fafc;
+      --card-bg-counted: #111e2e;
+      --text-main: #f1f5f9;
       --text-muted: #94a3b8;
       --border-color: #334155;
       --input-bg: #0f172a;
-      --badge-bg: #334155;
-      --nhs-blue: #38bdf8;
-      --nhs-dark-blue: #0284c7;
-      --nhs-green: #34d399;
+      --badge-bg: #273549;
+
+      /* Muted, high-contrast accessible accents */
+      --nhs-blue: #1d4ed8;
+      --nhs-dark-blue: #1e3a8a;
+      --nhs-green: #15803d;
       --nhs-green-light: #064e3b;
-      --nhs-green-border: #059669;
-      --nhs-red: #f87171;
-      --nhs-amber: #fbbf24;
-      --nhs-amber-light: #78350f;
-      --nhs-amber-border: #d97706;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.5);
+      --nhs-green-border: #166534;
+      --nhs-red: #b91c1c;
+      --nhs-amber: #92400e;
+      --nhs-amber-light: #451a03;
+      --nhs-amber-border: #78350f;
+    }
+
+    /* Soft Midnight Blue Header (No Blinding Cyan) */
+    html.dark-mode header, body.dark-mode header {
+      background: #002b66;
+      border: 1px solid #1e3a8a;
+      border-left: 6px solid #3b82f6;
+    }
+
+    /* Calmer Text Accents */
+    html.dark-mode .item-title {
+      color: #93c5fd;
+    }
+    html.dark-mode .metric-value.min-tag {
+      color: #4ade80;
+    }
+    html.dark-mode .metric-value.use-tag {
+      color: #60a5fa;
+    }
+
+    /* Matte Buttons in Dark Mode */
+    html.dark-mode .btn {
+      background: #1d4ed8;
+      color: #ffffff;
+    }
+    html.dark-mode .btn-green {
+      background: #166534; /* Deep, restful forest green */
+      color: #ffffff;
+    }
+    html.dark-mode .btn-amber,
+    html.dark-mode .btn-adjust-targets {
+      background: #92400e !important; /* Muted warm amber */
+      color: #ffffff !important;
+    }
+    html.dark-mode .btn-secondary {
+      background: #334155;
+      color: #f1f5f9;
+    }
+    html.dark-mode .btn-light-orange {
+      background: #9a3412 !important; /* Deep warm terracotta instead of bright neon */
+      color: #ffedd5 !important;
+      border-color: #c2410c;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
