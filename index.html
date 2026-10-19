@@ -6,36 +6,51 @@
   <title>NHS MRI Stock Control & Target Manager</title>
   <style>
     /* =========================================
-       THEMES & VARIABLES
+       NHS DESIGN SYSTEM TOKENS & THEMES
        ========================================= */
     :root {
       --nhs-blue: #005eb8;
       --nhs-dark-blue: #003087;
       --nhs-green: #007f3b;
+      --nhs-green-light: #e6f4ea;
+      --nhs-green-border: #a8dab5;
       --nhs-red: #d5281b;
       --nhs-amber: #b45309;
-      --bg-color: #f0f4f5;
+      --nhs-amber-light: #fef3c7;
+      --nhs-amber-border: #fcd34d;
+      
+      --bg-color: #f4f6f8;
       --card-bg: #ffffff;
-      --text-main: #000000;
-      --text-muted: #1f2937;
-      --border-color: #94a3b8;
+      --card-bg-counted: #f8fafc;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --border-color: #cbd5e1;
       --input-bg: #ffffff;
-      --badge-bg: #e2e8f0;
+      --badge-bg: #f1f5f9;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
     }
 
     html.dark-mode, body.dark-mode {
       --bg-color: #0b1120;
       --card-bg: #1e293b;
-      --text-main: #ffffff;
-      --text-muted: #cbd5e1;
-      --border-color: #475569;
+      --card-bg-counted: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
       --input-bg: #0f172a;
       --badge-bg: #334155;
       --nhs-blue: #38bdf8;
       --nhs-dark-blue: #0284c7;
-      --nhs-green: #4ade80;
+      --nhs-green: #34d399;
+      --nhs-green-light: #064e3b;
+      --nhs-green-border: #059669;
       --nhs-red: #f87171;
       --nhs-amber: #fbbf24;
+      --nhs-amber-light: #78350f;
+      --nhs-amber-border: #d97706;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.5);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,58 +66,74 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 680px; margin: 0 auto; }
+    .container { max-width: 650px; margin: 0 auto; }
 
-    /* Accessibility & Top Control Toolbar */
+    /* =========================================
+       TOP CONTROL & ACCESSIBILITY TOOLBAR
+       ========================================= */
     .a11y-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      padding: 8px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 6px 12px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-sm);
       gap: 6px;
       flex-wrap: wrap;
     }
     .a11y-group { display: flex; align-items: center; gap: 6px; }
-    .a11y-label { font-size: 0.9rem; font-weight: 800; color: var(--text-muted); }
+    .a11y-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
     .a11y-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 2px solid var(--border-color);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 7px 10px;
-      font-weight: 900;
+      padding: 6px 10px;
+      font-weight: 800;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       touch-action: manipulation;
+      transition: all 0.15s ease;
     }
-    .a11y-btn:active { background: var(--border-color); }
-    
+    .a11y-btn:active { transform: scale(0.96); }
     .a11y-btn.active-settings {
       background: var(--nhs-blue);
       color: #ffffff;
       border-color: var(--nhs-blue);
     }
 
-    /* Flat Header Banner */
+    /* Flat Clean NHS Header */
     header {
       background: var(--nhs-blue);
       color: #ffffff;
       padding: 14px 16px;
-      border-radius: 0;
-      box-shadow: none;
-      border: 1px solid var(--nhs-dark-blue);
-      border-left: 6px solid var(--nhs-dark-blue);
+      border-radius: 10px;
       margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
-    header h1 { font-size: 1.3rem; font-weight: 900; }
-    header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
+    .header-badge {
+      display: inline-block;
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.2px; }
+    header p { font-size: 0.85rem; opacity: 0.95; font-weight: 500; }
 
-    /* Top Action Buttons (2/3 and 1/3 split) */
+    /* Top Action Row (2/3 & 1/3) */
     .action-btn-row {
       display: flex;
       gap: 8px;
@@ -112,59 +143,70 @@
     .btn-submit-order {
       flex: 2;
       margin-top: 0 !important;
-      padding: 14px 8px !important;
-      font-size: 1rem !important;
+      padding: 13px 10px !important;
+      font-size: 0.98rem !important;
+      border-radius: 10px !important;
     }
     .btn-adjust-targets {
       flex: 1;
       margin-top: 0 !important;
-      padding: 14px 6px !important;
+      padding: 13px 8px !important;
       font-size: 0.85rem !important;
       background: var(--nhs-amber) !important;
+      border-radius: 10px !important;
     }
-    .btn-adjust-targets:active {
-      opacity: 0.85;
-    }
+    .btn-adjust-targets:active { opacity: 0.85; }
 
+    /* Card Panels */
     .card {
       background: var(--card-bg);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-      border: 2px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      transition: border-color 0.2s, background-color 0.2s;
     }
 
-    /* Site Last Order Information Banner */
-    .site-history-banner {
-      background: #eff6ff;
-      border: 2px solid #93c5fd;
-      color: #1e3a8a;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-weight: 700;
+    /* Step indicator in setup card */
+    .field-row {
       margin-bottom: 12px;
-      display: none;
     }
-    html.dark-mode .site-history-banner, body.dark-mode .site-history-banner {
-      background: #1e3a8a;
-      border-color: #3b82f6;
-      color: #dbeafe;
+    .field-row:last-child {
+      margin-bottom: 0;
+    }
+    .step-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--nhs-blue);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-right: 6px;
     }
 
-    label { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main); }
+    label { font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; margin-bottom: 6px; color: var(--text-main); }
 
     select, input[type="text"], input[type="email"], input[type="number"], input[type="search"], textarea {
       width: 100%;
-      padding: 12px;
-      border-radius: 6px;
-      border: 2px solid var(--border-color);
-      font-size: 1.05rem;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border-color);
+      font-size: 1rem;
       background: var(--input-bg);
       color: var(--text-main);
-      font-weight: 700;
+      font-weight: 600;
+      transition: border-color 0.15s, box-shadow 0.15s;
       -webkit-appearance: none;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--nhs-blue);
+      box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.15);
     }
 
     .input-required {
@@ -175,118 +217,260 @@
       background-color: #450a0a !important;
     }
 
-    /* Input Plausibility Warning State */
-    .input-warning {
-      border: 2.5px solid var(--nhs-amber) !important;
-      background-color: #fffbeb !important;
-    }
-    html.dark-mode .input-warning, body.dark-mode .input-warning {
-      background-color: #78350f !important;
-    }
-
-    .item-warning-msg {
-      color: var(--nhs-amber);
-      font-size: 0.82rem;
-      font-weight: 800;
-      margin-top: 4px;
+    /* Site History Banner */
+    .site-history-banner {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid var(--nhs-blue);
+      color: #1e3a8a;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 10px;
       display: none;
+    }
+    html.dark-mode .site-history-banner, body.dark-mode .site-history-banner {
+      background: #172554;
+      border-color: #1e40af;
+      color: #bfdbfe;
     }
 
     .lock-notice {
-      background: #fef3c7;
-      border: 2px solid var(--nhs-amber);
-      color: #92400e;
+      background: var(--nhs-amber-light);
+      border: 1px solid var(--nhs-amber-border);
+      border-left: 4px solid var(--nhs-amber);
+      color: #78350f;
       padding: 10px 14px;
-      border-radius: 6px;
-      font-weight: 800;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
       margin-bottom: 12px;
       display: none;
     }
     html.dark-mode .lock-notice, body.dark-mode .lock-notice {
-      background: #78350f;
+      background: #451a03;
+      border-color: #78350f;
       color: #fef3c7;
-      border-color: #f59e0b;
     }
 
-    .search-box {
+    /* Search & Progress Toolbar */
+    .search-progress-bar {
+      display: none;
+      gap: 8px;
+      align-items: center;
       margin-bottom: 12px;
-      position: sticky;
-      top: 10px;
-      z-index: 10;
+    }
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-wrap input {
+      padding-left: 36px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.95rem;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .progress-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-pill strong {
+      color: var(--nhs-blue);
     }
 
-    /* Item Card */
+    /* =========================================
+       ITEM CARD - CLINICAL DASHBOARD LAYOUT
+       ========================================= */
     .item-card {
       background: var(--card-bg);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 14px;
-      margin-bottom: 12px;
-      border: 2px solid var(--border-color);
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
       gap: 10px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    /* When an item has been counted, card subtly highlights */
+    .item-card.is-counted {
+      border-color: var(--nhs-green-border);
+      background: #fbfdfc;
+    }
+    html.dark-mode .item-card.is-counted {
+      border-color: var(--nhs-green-border);
+      background: #11221b;
     }
 
-    .item-title { font-weight: 900; color: var(--nhs-blue); font-size: 1.15rem; }
-    .item-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; }
-
-    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      font-size: 0.9rem;
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .item-title {
       font-weight: 800;
-      padding: 5px 10px;
-      border-radius: 6px;
-      background: var(--badge-bg);
-      color: var(--text-main);
-      border: 1.5px solid var(--border-color);
+      color: var(--nhs-blue);
+      font-size: 1.1rem;
+      line-height: 1.25;
     }
-    .badge-green { background: #dcfce7; color: #14532d; border-color: #4ade80; }
-    .badge-blue { background: #dbeafe; color: #1e3a8a; border-color: #60a5fa; }
-    .badge-history { background: #fee2e2; color: #991b1b; border-color: #f87171; }
+    .item-meta {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .pack-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--badge-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+    .counted-badge {
+      display: none;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--nhs-green-light);
+      color: var(--nhs-green);
+      border: 1px solid var(--nhs-green-border);
+    }
+    .item-card.is-counted .counted-badge {
+      display: inline-block;
+    }
 
-    html.dark-mode .badge-green { background: #064e3b; color: #a7f3d0; border-color: #047857; }
-    html.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #2563eb; }
-    html.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
+    /* 3-Column Metrics Dashboard Bar */
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      background: var(--badge-bg);
+      border-radius: 8px;
+      padding: 6px 8px;
+      gap: 6px;
+      border: 1px solid var(--border-color);
+    }
+    .metric-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border-right: 1px solid var(--border-color);
+    }
+    .metric-cell:last-child {
+      border-right: none;
+    }
+    .metric-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--text-muted);
+    }
+    .metric-value {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .metric-value.min-tag { color: var(--nhs-green); }
+    .metric-value.use-tag { color: var(--nhs-blue); }
 
-    /* Stepper Controls */
-    .counter-control {
+    /* Unified Capsule Stepper */
+    .counter-capsule {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-top: 4px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--input-bg);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .counter-capsule:focus-within {
+      border-color: var(--nhs-blue);
+      box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.15);
     }
     .counter-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 2px solid var(--border-color);
+      border: none;
       width: 52px;
-      height: 52px;
-      border-radius: 8px;
-      font-size: 1.8rem;
+      height: 46px;
+      font-size: 1.6rem;
       font-weight: 900;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
       touch-action: manipulation;
+      user-select: none;
+      transition: background-color 0.1s;
     }
-    .counter-btn:active { background: var(--border-color); }
+    .counter-btn:active {
+      background: var(--border-color);
+    }
     .count-input {
       flex: 1;
-      height: 52px;
+      height: 46px;
       text-align: center;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 900;
-      border: 2px solid var(--border-color);
-      border-radius: 8px;
-      background: var(--input-bg);
+      border: none !important;
+      background: transparent !important;
       color: var(--text-main);
+      box-shadow: none !important;
+      padding: 0;
     }
 
-    /* 3-Column Adjustment Grid */
+    /* Warning Alert Inside Card */
+    .item-warning-msg {
+      background: var(--nhs-amber-light);
+      border: 1px solid var(--nhs-amber-border);
+      color: #92400e;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: none;
+      line-height: 1.35;
+    }
+    html.dark-mode .item-warning-msg {
+      background: #451a03;
+      border-color: #78350f;
+      color: #fde68a;
+    }
+
+    .input-warning {
+      border-color: var(--nhs-amber) !important;
+      background-color: #fffbeb !important;
+    }
+    html.dark-mode .input-warning {
+      background-color: #3b1d06 !important;
+    }
+
+    /* 3-Column Adjustment Grid in Adjust View */
     .edit-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -295,53 +479,38 @@
       background: var(--badge-bg);
       padding: 10px;
       border-radius: 8px;
-      border: 2px dashed var(--border-color);
+      border: 1px dashed var(--border-color);
     }
-    .edit-grid label { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-align: center; }
-    .edit-grid input { height: 46px; font-weight: 800; text-align: center; font-size: 1.15rem; padding: 6px 4px; }
+    .edit-grid label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-align: center; justify-content: center; }
+    .edit-grid input { height: 44px; font-weight: 800; text-align: center; font-size: 1.1rem; padding: 4px; }
 
-    @media (max-width: 480px) {
-      .edit-grid {
-        gap: 6px;
-        padding: 8px;
-      }
-      .edit-grid label {
-        font-size: 0.75rem;
-      }
-      .edit-grid input {
-        font-size: 1rem;
-      }
-    }
-
-    /* Button Styles */
+    /* Button System */
     .btn {
       display: block;
       width: 100%;
       background: var(--nhs-blue);
       color: #ffffff;
       border: none;
-      border-radius: 8px;
-      padding: 16px;
-      font-size: 1.1rem;
-      font-weight: 900;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 1.05rem;
+      font-weight: 800;
       cursor: pointer;
       text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow-sm);
       touch-action: manipulation;
+      transition: all 0.15s ease;
     }
-    .btn:active { opacity: 0.85; }
+    .btn:active { transform: scale(0.98); opacity: 0.9; }
     .btn-green { background: var(--nhs-green); }
     .btn-amber { background: var(--nhs-amber); }
     .btn-secondary { background: #475569; }
-
     .btn-light-orange {
       background: #ff9e42 !important;
       color: #111827 !important;
       border: 1px solid #f59e0b;
     }
-    .btn-light-orange:active {
-      background: #f59e0b !important;
-    }
+    .btn-light-orange:active { background: #f59e0b !important; }
 
     .loader {
       display: none;
@@ -349,7 +518,7 @@
       padding: 24px;
       font-weight: 800;
       color: var(--nhs-blue);
-      font-size: 1.2rem;
+      font-size: 1.15rem;
     }
 
     #resultView, #adjustView, #settingsView { display: none; }
@@ -357,17 +526,17 @@
       width: 100%;
       border-collapse: collapse;
       margin: 15px 0;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
     .outlook-table th, .outlook-table td {
       border: 1px solid var(--border-color);
       padding: 10px;
       text-align: left;
     }
-    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
-    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
+    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 800; }
+    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.1rem; }
 
-    /* Modal Styles */
+    /* Modal Backdrop & Dialog */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -381,48 +550,48 @@
     .modal-card {
       background: var(--card-bg);
       color: var(--text-main);
-      border: 2px solid var(--border-color);
-      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
       width: 100%;
-      max-width: 550px;
+      max-width: 520px;
       max-height: 85vh;
       overflow-y: auto;
       padding: 20px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
     }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
       padding-bottom: 10px;
       margin-bottom: 14px;
     }
     .modal-close-btn {
       background: transparent;
       border: none;
-      font-size: 1.6rem;
-      font-weight: 900;
+      font-size: 1.5rem;
+      font-weight: 800;
       cursor: pointer;
       color: var(--text-muted);
-      padding: 0 8px;
+      padding: 0 6px;
     }
     .modal-body {
-      font-size: 1rem;
+      font-size: 0.95rem;
       line-height: 1.6;
       white-space: pre-wrap;
       color: var(--text-main);
-      font-weight: 600;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Top Toolbar -->
+  <!-- Top Utility Toolbar -->
   <div class="a11y-bar">
     <div class="a11y-group">
-      <span class="a11y-label">Font:</span>
+      <span class="a11y-label">Text:</span>
       <button type="button" class="a11y-btn" onclick="stepFontSize(-2)">−Aa</button>
       <button type="button" class="a11y-btn" onclick="stepFontSize(2)">+Aa</button>
     </div>
@@ -440,7 +609,9 @@
     </div>
   </div>
 
+  <!-- Header Banner -->
   <header>
+    <span class="header-badge">NHS Foundation Trust</span>
     <h1>STH MRI Consumables & IV Stock</h1>
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
@@ -449,42 +620,58 @@
        VIEW 1: STOCK COUNT & ORDER VIEW
        ========================================= -->
   <div id="countView">
+    <!-- Top Action Buttons -->
     <div class="action-btn-row">
       <button type="button" class="btn btn-green btn-submit-order" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
       <button type="button" class="btn btn-amber btn-adjust-targets" onclick="switchTab('adjust')">🎯 Adjust Targets</button>
     </div>
 
+    <!-- Consolidated Session Setup Card -->
     <div class="card">
-      <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
-      <input type="text" id="staffName" placeholder="Your name here..." oninput="handleStaffNameInput()">
-    </div>
+      <div class="field-row">
+        <label for="staffName">
+          <span class="step-tag">1</span> Ordering Person's Name & Title: <span style="color:var(--nhs-red); margin-left:4px;">*</span>
+        </label>
+        <input type="text" id="staffName" placeholder="e.g. Sarah Jenkins (Senior Radiographer)" oninput="handleStaffNameInput()">
+      </div>
 
-    <div class="card">
-      <label for="siteSelect">2. Select Hospital Site:</label>
-      <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
-        <option value="">-- Choose Site --</option>
-        <option value="NGH">Northern General Hospital (NGH)</option>
-        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
-        <option value="WPH">Weston Park Hospital (WPH)</option>
-      </select>
+      <div class="field-row">
+        <label for="siteSelect">
+          <span class="step-tag">2</span> Select Hospital Site:
+        </label>
+        <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
+          <option value="">-- Choose Hospital Site --</option>
+          <option value="NGH">Northern General Hospital (NGH)</option>
+          <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+          <option value="WPH">Weston Park Hospital (WPH)</option>
+        </select>
+        
+        <!-- Site History Banner -->
+        <div id="siteHistoryBanner" class="site-history-banner"></div>
+      </div>
     </div>
-
-    <!-- Last Order Banner for Selected Site -->
-    <div id="siteHistoryBanner" class="site-history-banner"></div>
 
     <div id="lockNotice" class="lock-notice">
       🔒 Please enter your Name & Title above to unlock stock level entry.
     </div>
 
-    <div class="search-box" id="searchBoxContainer" style="display:none;">
-      <input type="search" id="itemSearch" placeholder="🔍 Filter items (e.g. Dotarem, Saline, Buscopan)..." oninput="filterItems()">
+    <!-- Live Search & Progress Dashboard Bar -->
+    <div class="search-progress-bar" id="searchBoxContainer">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="itemSearch" placeholder="Filter items (e.g. Dotarem, Saline, Primovist)..." oninput="filterItems()">
+      </div>
+      <div class="progress-pill" id="progressPill">
+        Counted: <strong id="countedTracker">0</strong>/<span id="totalTracker">0</span>
+      </div>
     </div>
 
+    <!-- Cards Container -->
     <div id="itemsContainer"></div>
 
-    <div class="card">
+    <div class="card" id="notesCard">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Next-day delivery requested for neuro MRI list"></textarea>
     </div>
   </div>
 
@@ -496,22 +683,24 @@
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📊 Target Baselines & Actual Stock</h3>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
-        Adjust <strong>Average Weekly Use</strong>, <strong>Minimum Target Stock Level</strong>, or enter <strong>Actual Current Stock</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab (Columns J, K, L) and update the ledger.
+    <div class="card" style="border-left: 4px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 4px; font-weight: 800;">📊 Target Baselines & Actual Stock</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 500;">
+        Adjust <strong>Average Weekly Use</strong>, <strong>Minimum Target Stock Level</strong>, or enter <strong>Actual Current Stock</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab (Columns J, K, L).
       </p>
 
-      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
-      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
-        <option value="">-- Choose Site --</option>
-        <option value="NGH">Northern General Hospital (NGH)</option>
-        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
-        <option value="WPH">Weston Park Hospital (WPH)</option>
-      </select>
+      <div class="field-row">
+        <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+        <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
+          <option value="">-- Choose Site --</option>
+          <option value="NGH">Northern General Hospital (NGH)</option>
+          <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+          <option value="WPH">Weston Park Hospital (WPH)</option>
+        </select>
+      </div>
 
-      <div style="margin-top: 12px;">
-        <label for="adjustStaffName">Superintendent / Editor Name: <span style="color:var(--nhs-red);">*</span></label>
+      <div class="field-row">
+        <label for="adjustStaffName">Superintendent / Editor Name: <span style="color:var(--nhs-red); margin-left:4px;">*</span></label>
         <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
       </div>
     </div>
@@ -531,16 +720,16 @@
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <div class="card" style="border-left: 6px solid var(--nhs-blue);">
-      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email Order Configuration</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+    <div class="card" style="border-left: 4px solid var(--nhs-blue);">
+      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 4px; font-weight: 800;">📧 Email Order Configuration</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 500;">
         Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
       </p>
 
       <div style="margin-bottom: 10px;">
         <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
         <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Note: For RHH and WPH, the To field will automatically remain blank.</span>
+        <span style="font-size: 0.72rem; color: var(--text-muted); display:block; margin-top:3px;">Note: For RHH and WPH, the To field will automatically remain blank.</span>
       </div>
 
       <div style="margin-bottom: 10px;">
@@ -551,7 +740,7 @@
       <div style="margin-bottom: 10px;">
         <label for="cfgEmailSubject">Email Title / Subject Line:</label>
         <input type="text" id="cfgEmailSubject" placeholder="IV Fluids Stock order {todays date}">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Use <code>{todays date}</code> to insert the current date automatically.</span>
+        <span style="font-size: 0.72rem; color: var(--text-muted); display:block; margin-top:3px;">Use <code>{todays date}</code> to insert the current date automatically.</span>
       </div>
 
       <div style="margin-bottom: 12px;">
@@ -571,7 +760,7 @@
         <textarea id="cfgGuidanceText" rows="4" placeholder="Instructions here..."></textarea>
       </div>
 
-      <button type="button" class="btn btn-secondary" style="padding:12px; font-size:1rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
+      <button type="button" class="btn btn-secondary" style="padding:12px; font-size:0.95rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
     </div>
   </div>
 
@@ -581,8 +770,8 @@
        VIEW 4: RESULTS VIEW
        ========================================= -->
   <div id="resultView" class="card">
-    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
-    <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
+    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">Stock Ledger Updated</h2>
+    <p style="font-size: 0.9rem; margin-bottom: 14px; font-weight: 600; color: var(--text-muted);">
       Your stock levels have been saved to the ledger. Dispatch the order below:
     </p>
 
@@ -598,7 +787,7 @@
 <div id="guidanceModal" class="modal-backdrop" onclick="closeGuidanceModal(event)">
   <div class="modal-card">
     <div class="modal-header">
-      <h2 id="guidanceHeadingText" style="color:var(--nhs-blue); font-size:1.25rem; font-weight:900;">Stock Ordering Guidance</h2>
+      <h2 id="guidanceHeadingText" style="color:var(--nhs-blue); font-size:1.2rem; font-weight:800;">Stock Ordering Guidance</h2>
       <button type="button" class="modal-close-btn" onclick="hideGuidanceModal()">✕</button>
     </div>
     <div id="guidanceBodyText" class="modal-body">
@@ -713,13 +902,42 @@
     let val = parseFloat(input.value) || 0;
     val = Math.max(0, val + change);
     input.value = val;
-    validateStockPlausibility(input);
+    handleStockInputEvents(input);
   }
 
   function onStockInputFocus(input) {
     if (!hasValidStaffName()) {
       input.blur();
       requireStaffName();
+    }
+  }
+
+  function handleStockInputEvents(input) {
+    validateStockPlausibility(input);
+    updateCountedState(input);
+    updateProgressTracker();
+  }
+
+  function updateCountedState(input) {
+    const card = input.closest('.item-card');
+    if (input.value.trim() !== "") {
+      card.classList.add('is-counted');
+    } else {
+      card.classList.remove('is-counted');
+    }
+  }
+
+  function updateProgressTracker() {
+    const inputs = document.querySelectorAll('.stock-input');
+    let counted = 0;
+    inputs.forEach(inp => {
+      if (inp.value.trim() !== "") counted++;
+    });
+    const tracker = document.getElementById('countedTracker');
+    const totalTracker = document.getElementById('totalTracker');
+    if (tracker && totalTracker) {
+      tracker.innerText = counted;
+      totalTracker.innerText = inputs.length;
     }
   }
 
@@ -733,16 +951,17 @@
       const days = Math.max(1, diffMs / (1000 * 60 * 60 * 24));
       return Math.max(0.5, days / 7);
     }
-    return 1.0; // Default to 1 week if no prior date
+    return 1.0;
   }
 
   function validateStockPlausibility(input) {
     const card = input.closest('.item-card');
+    const capsule = input.closest('.counter-capsule');
     const warningDiv = card.querySelector('.item-warning-msg');
     const valStr = input.value.trim();
 
     if (valStr === "") {
-      input.classList.remove('input-warning');
+      if (capsule) capsule.classList.remove('input-warning');
       if (warningDiv) warningDiv.style.display = "none";
       return true;
     }
@@ -753,21 +972,20 @@
     const site = document.getElementById("siteSelect").value;
     const weeksElapsed = getWeeksElapsedForSite(site);
 
-    // Formula: expectedMin = lastStock - (weeklyUse * weeksElapsed * fudgeFactor 2.0)
     if (lastStock > 0 && weeklyUse > 0) {
       const expectedMin = Math.max(0, Math.floor(lastStock - (weeklyUse * weeksElapsed * 2.0)));
 
       if (enteredVal < expectedMin) {
-        input.classList.add('input-warning');
+        if (capsule) capsule.classList.add('input-warning');
         if (warningDiv) {
-          warningDiv.innerText = `⚠️ Warning: Count (${enteredVal}) seems unusually low. Based on previous stock (${lastStock}) and usage (~${weeklyUse}/wk), expected ≥ ${expectedMin}. Please double-check!`;
+          warningDiv.innerText = `⚠️ Warning: Count (${enteredVal}) seems unusually low. Expected ≥ ${expectedMin} based on previous stock (${lastStock}) and usage (~${weeklyUse}/wk). Please verify!`;
           warningDiv.style.display = "block";
         }
         return false;
       }
     }
 
-    input.classList.remove('input-warning');
+    if (capsule) capsule.classList.remove('input-warning');
     if (warningDiv) warningDiv.style.display = "none";
     return true;
   }
@@ -816,7 +1034,7 @@
   }
 
   function handleSiteSelectChange(val) {
-    document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    document.getElementById("searchBoxContainer").style.display = val ? "flex" : "none";
     updateSiteHistoryBanner(val);
     renderItems();
   }
@@ -835,10 +1053,10 @@
         const days = Math.round((new Date() - new Date(h.isoDate)) / (1000 * 60 * 60 * 24));
         timeAgo = days === 0 ? " (Today)" : days === 1 ? " (Yesterday)" : ` (${days} days ago)`;
       }
-      banner.innerHTML = `📅 <strong>Last Order/Count for ${site}:</strong> ${h.date} by <strong>${h.staff}</strong>${timeAgo}`;
+      banner.innerHTML = `📅 <strong>Last Count for ${site}:</strong> ${h.date} by <strong>${h.staff}</strong>${timeAgo}`;
       banner.style.display = "block";
     } else {
-      banner.innerHTML = `📅 <strong>Last Order/Count for ${site}:</strong> No previous record logged in ledger.`;
+      banner.innerHTML = `📅 <strong>Last Count for ${site}:</strong> No previous record logged in ledger.`;
       banner.style.display = "block";
     }
   }
@@ -913,34 +1131,49 @@
       const minTarget = item.minTarget[site] || 0;
       const key = `${site}_${itemName}_${itemDesc}`;
 
-      // Extract current known stock (Columns J, K, L or latest ledger entry)
       let currentKnownStock = 0;
-      let historyText = "No previous record";
+      let historyText = "0";
 
       if (item.currentStock && item.currentStock[site] !== "") {
         currentKnownStock = parseFloat(item.currentStock[site]);
-        historyText = `Stock on file: ${currentKnownStock}`;
+        historyText = `${currentKnownStock}`;
       } else if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
-        historyText = `Last: ${h.value} (${h.date})`;
         const countMatch = String(h.value).match(/Count:\s*(\d+(\.\d+)?)/i);
-        if (countMatch) currentKnownStock = parseFloat(countMatch[1]);
+        if (countMatch) {
+          currentKnownStock = parseFloat(countMatch[1]);
+          historyText = `${currentKnownStock}`;
+        }
       }
 
       const itemCard = document.createElement("div");
       itemCard.className = "item-card";
       itemCard.setAttribute("data-search", `${itemName} ${itemDesc}`);
       itemCard.innerHTML = `
-        <div>
-          <div class="item-title">${itemName}</div>
-          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        <div class="item-header">
+          <div>
+            <div class="item-title">${itemName}</div>
+            <div class="item-meta">${itemDesc} <span class="pack-tag">${packSize}</span></div>
+          </div>
+          <span class="counted-badge">✓ Counted</span>
         </div>
-        <div class="badge-row">
-          <span class="badge badge-green">Min Target: ${minTarget}</span>
-          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
-          <span class="badge badge-history">${historyText}</span>
+
+        <div class="metrics-bar">
+          <div class="metric-cell">
+            <span class="metric-label">Min Target</span>
+            <span class="metric-value min-tag">${minTarget}</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">Weekly Use</span>
+            <span class="metric-value use-tag">~${weeklyUse}</span>
+          </div>
+          <div class="metric-cell">
+            <span class="metric-label">On File</span>
+            <span class="metric-value">${historyText}</span>
+          </div>
         </div>
-        <div class="counter-control">
+
+        <div class="counter-capsule">
           <button type="button" class="counter-btn" onclick="stepCount(this, -1)">−</button>
           <input type="number" min="0" class="count-input stock-input" 
             data-item="${itemName}" 
@@ -951,15 +1184,17 @@
             data-last-stock="${currentKnownStock}"
             placeholder="Qty"
             onfocus="onStockInputFocus(this)"
-            oninput="validateStockPlausibility(this)">
+            oninput="handleStockInputEvents(this)">
           <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
         </div>
+
         <div class="item-warning-msg"></div>
       `;
       container.appendChild(itemCard);
     });
 
     filterItems();
+    updateProgressTracker();
   }
 
   function renderAdjustItems() {
@@ -996,18 +1231,16 @@
         }
       }
 
-      const historyText = currentStockVal !== "" ? `Current in sheet: ${currentStockVal}` : "No count in sheet";
-
       const card = document.createElement("div");
       card.className = "item-card";
       card.innerHTML = `
-        <div>
-          <div class="item-title">${itemName}</div>
-          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        <div class="item-header">
+          <div>
+            <div class="item-title">${itemName}</div>
+            <div class="item-meta">${itemDesc} <span class="pack-tag">${packSize}</span></div>
+          </div>
         </div>
-        <div class="badge-row">
-          <span class="badge badge-history">${historyText}</span>
-        </div>
+
         <div class="edit-grid">
           <div>
             <label>Avg Weekly:</label>
@@ -1152,7 +1385,9 @@
           current: inp.value
         });
 
-        if (inp.classList.contains('input-warning')) {
+        const card = inp.closest('.item-card');
+        const warningDiv = card ? card.querySelector('.item-warning-msg') : null;
+        if (warningDiv && warningDiv.style.display === "block") {
           suspiciousItems.push(`- ${inp.dataset.item} (${inp.dataset.desc}): Count entered is ${inp.value}`);
         }
       }
@@ -1163,7 +1398,6 @@
       return;
     }
 
-    // Confirmation if any plausibility warnings are active
     if (suspiciousItems.length > 0) {
       const confirmMsg = "⚠️ ATTENTION: The following stock count(s) appear unusually low compared to historical usage:\n\n" +
                          suspiciousItems.join("\n") +
