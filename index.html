@@ -6,96 +6,36 @@
   <title>NHS MRI Stock Control & Target Manager</title>
   <style>
     /* =========================================
-       NHS DESIGN SYSTEM TOKENS & THEMES
+       THEMES & VARIABLES
        ========================================= */
     :root {
       --nhs-blue: #005eb8;
       --nhs-dark-blue: #003087;
       --nhs-green: #007f3b;
-      --nhs-green-light: #e6f4ea;
-      --nhs-green-border: #a8dab5;
       --nhs-red: #d5281b;
       --nhs-amber: #b45309;
-      --nhs-amber-light: #fef3c7;
-      --nhs-amber-border: #fcd34d;
-      
-      --bg-color: #f4f6f8;
+      --bg-color: #f0f4f5;
       --card-bg: #ffffff;
-      --card-bg-counted: #f8fafc;
-      --text-main: #111827;
-      --text-muted: #4b5563;
-      --border-color: #cbd5e1;
+      --text-main: #000000;
+      --text-muted: #1f2937;
+      --border-color: #94a3b8;
       --input-bg: #ffffff;
-      --badge-bg: #f1f5f9;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
+      --badge-bg: #e2e8f0;
     }
 
-/* =========================================
-       SUBDUED, GLARE-FREE DARK ROOM PALETTE
-       ========================================= */
     html.dark-mode, body.dark-mode {
       --bg-color: #0b1120;
       --card-bg: #1e293b;
-      --card-bg-counted: #111e2e;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
+      --text-main: #ffffff;
+      --text-muted: #cbd5e1;
+      --border-color: #475569;
       --input-bg: #0f172a;
-      --badge-bg: #273549;
-
-      /* Muted, high-contrast accessible accents */
-      --nhs-blue: #1d4ed8;
-      --nhs-dark-blue: #1e3a8a;
-      --nhs-green: #15803d;
-      --nhs-green-light: #064e3b;
-      --nhs-green-border: #166534;
-      --nhs-red: #b91c1c;
-      --nhs-amber: #92400e;
-      --nhs-amber-light: #451a03;
-      --nhs-amber-border: #78350f;
-    }
-
-    /* Soft Midnight Blue Header (No Blinding Cyan) */
-    html.dark-mode header, body.dark-mode header {
-      background: #002b66;
-      border: 1px solid #1e3a8a;
-      border-left: 6px solid #3b82f6;
-    }
-
-    /* Calmer Text Accents */
-    html.dark-mode .item-title {
-      color: #93c5fd;
-    }
-    html.dark-mode .metric-value.min-tag {
-      color: #4ade80;
-    }
-    html.dark-mode .metric-value.use-tag {
-      color: #60a5fa;
-    }
-
-    /* Matte Buttons in Dark Mode */
-    html.dark-mode .btn {
-      background: #1d4ed8;
-      color: #ffffff;
-    }
-    html.dark-mode .btn-green {
-      background: #166534; /* Deep, restful forest green */
-      color: #ffffff;
-    }
-    html.dark-mode .btn-amber,
-    html.dark-mode .btn-adjust-targets {
-      background: #92400e !important; /* Muted warm amber */
-      color: #ffffff !important;
-    }
-    html.dark-mode .btn-secondary {
-      background: #334155;
-      color: #f1f5f9;
-    }
-    html.dark-mode .btn-light-orange {
-      background: #9a3412 !important; /* Deep warm terracotta instead of bright neon */
-      color: #ffedd5 !important;
-      border-color: #c2410c;
+      --badge-bg: #334155;
+      --nhs-blue: #38bdf8;
+      --nhs-dark-blue: #0284c7;
+      --nhs-green: #4ade80;
+      --nhs-red: #f87171;
+      --nhs-amber: #fbbf24;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -111,74 +51,58 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 650px; margin: 0 auto; }
+    .container { max-width: 680px; margin: 0 auto; }
 
-    /* =========================================
-       TOP CONTROL & ACCESSIBILITY TOOLBAR
-       ========================================= */
+    /* Accessibility & Top Control Toolbar */
     .a11y-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 6px 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 10px;
       margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       gap: 6px;
       flex-wrap: wrap;
     }
     .a11y-group { display: flex; align-items: center; gap: 6px; }
-    .a11y-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+    .a11y-label { font-size: 0.9rem; font-weight: 800; color: var(--text-muted); }
     .a11y-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
+      border: 2px solid var(--border-color);
       border-radius: 6px;
-      padding: 6px 10px;
-      font-weight: 800;
+      padding: 7px 10px;
+      font-weight: 900;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       touch-action: manipulation;
-      transition: all 0.15s ease;
     }
-    .a11y-btn:active { transform: scale(0.96); }
+    .a11y-btn:active { background: var(--border-color); }
+    
     .a11y-btn.active-settings {
       background: var(--nhs-blue);
       color: #ffffff;
       border-color: var(--nhs-blue);
     }
 
-    /* Flat Clean NHS Header */
+    /* Flat Header Banner */
     header {
       background: var(--nhs-blue);
       color: #ffffff;
       padding: 14px 16px;
-      border-radius: 0; /* Square corners */
+      border-radius: 0;
+      box-shadow: none;
+      border: 1px solid var(--nhs-dark-blue);
+      border-left: 6px solid var(--nhs-dark-blue);
       margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
     }
-    .header-badge {
-      display: inline-block;
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-    header h1 { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.2px; }
-    header p { font-size: 0.85rem; opacity: 0.95; font-weight: 500; }
+    header h1 { font-size: 1.3rem; font-weight: 900; }
+    header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
 
-    /* Top Action Row (2/3 & 1/3) */
+    /* Top Action Buttons (2/3 and 1/3 split) */
     .action-btn-row {
       display: flex;
       gap: 8px;
@@ -186,72 +110,43 @@
       align-items: stretch;
     }
     .btn-submit-order {
-      flex: 2;
+      flex: 2; /* 2/3 width */
       margin-top: 0 !important;
-      padding: 13px 10px !important;
-      font-size: 0.98rem !important;
-      border-radius: 10px !important;
+      padding: 14px 8px !important;
+      font-size: 1rem !important;
     }
     .btn-adjust-targets {
-      flex: 1;
+      flex: 1; /* 1/3 width */
       margin-top: 0 !important;
-      padding: 13px 8px !important;
+      padding: 14px 6px !important;
       font-size: 0.85rem !important;
       background: var(--nhs-amber) !important;
-      border-radius: 10px !important;
     }
-    .btn-adjust-targets:active { opacity: 0.85; }
+    .btn-adjust-targets:active {
+      opacity: 0.85;
+    }
 
-    /* Card Panels */
     .card {
       background: var(--card-bg);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-color);
-      transition: border-color 0.2s, background-color 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      border: 2px solid var(--border-color);
     }
 
-    /* Step indicator in setup card */
-    .field-row {
-      margin-bottom: 12px;
-    }
-    .field-row:last-child {
-      margin-bottom: 0;
-    }
-    .step-tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--nhs-blue);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: 800;
-      margin-right: 6px;
-    }
-
-    label { font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; margin-bottom: 6px; color: var(--text-main); }
+    label { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main); }
 
     select, input[type="text"], input[type="email"], input[type="number"], input[type="search"], textarea {
       width: 100%;
-      padding: 11px 12px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border-color);
-      font-size: 1rem;
+      padding: 12px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      font-size: 1.05rem;
       background: var(--input-bg);
       color: var(--text-main);
-      font-weight: 600;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      font-weight: 700;
       -webkit-appearance: none;
-    }
-    select:focus, input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--nhs-blue);
-      box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.15);
     }
 
     .input-required {
@@ -262,300 +157,132 @@
       background-color: #450a0a !important;
     }
 
-    /* Site History Banner */
-    .site-history-banner {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-left: 4px solid var(--nhs-blue);
-      color: #1e3a8a;
-      padding: 10px 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-top: 10px;
-      display: none;
-    }
-    html.dark-mode .site-history-banner, body.dark-mode .site-history-banner {
-      background: #172554;
-      border-color: #1e40af;
-      color: #bfdbfe;
-    }
-
     .lock-notice {
-      background: var(--nhs-amber-light);
-      border: 1px solid var(--nhs-amber-border);
-      border-left: 4px solid var(--nhs-amber);
-      color: #78350f;
+      background: #fef3c7;
+      border: 2px solid var(--nhs-amber);
+      color: #92400e;
       padding: 10px 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.85rem;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.9rem;
       margin-bottom: 12px;
       display: none;
     }
     html.dark-mode .lock-notice, body.dark-mode .lock-notice {
-      background: #451a03;
-      border-color: #78350f;
+      background: #78350f;
       color: #fef3c7;
+      border-color: #f59e0b;
     }
 
-    /* Search & Progress Toolbar */
-    .search-progress-bar {
-      display: none;
-      gap: 8px;
-      align-items: center;
+    .search-box {
       margin-bottom: 12px;
-    }
-    .search-wrap {
-      flex: 1;
-      position: relative;
-    }
-    .search-wrap input {
-      padding-left: 36px;
-    }
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.95rem;
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    .progress-pill {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      font-weight: 800;
-      color: var(--text-muted);
-      white-space: nowrap;
-      box-shadow: var(--shadow-sm);
-    }
-    .progress-pill strong {
-      color: var(--nhs-blue);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
     }
 
-    /* =========================================
-       ITEM CARD - CLINICAL DASHBOARD LAYOUT
-       ========================================= */
+    /* Item Card */
     .item-card {
       background: var(--card-bg);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 14px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      border: 2px solid var(--border-color);
       display: flex;
       flex-direction: column;
       gap: 10px;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-    
-    /* When an item has been counted, card subtly highlights */
-    .item-card.is-counted {
-      border-color: var(--nhs-green-border);
-      background: #fbfdfc;
-    }
-    html.dark-mode .item-card.is-counted {
-      border-color: var(--nhs-green-border);
-      background: #11221b;
     }
 
-    .item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-    }
-    .item-title {
-      font-weight: 800;
-      color: var(--nhs-blue);
-      font-size: 1.1rem;
-      line-height: 1.25;
-    }
-    .item-meta {
-      font-size: 0.86rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      margin-top: 2px;
-    }
-    .pack-tag {
-      display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--badge-bg);
-      color: var(--text-muted);
-      border: 1px solid var(--border-color);
-      vertical-align: middle;
-      margin-left: 4px;
-    }
-    .counted-badge {
-      display: none;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 20px;
-      background: var(--nhs-green-light);
-      color: var(--nhs-green);
-      border: 1px solid var(--nhs-green-border);
-    }
-    .item-card.is-counted .counted-badge {
-      display: inline-block;
-    }
+    .item-title { font-weight: 900; color: var(--nhs-blue); font-size: 1.15rem; }
+    .item-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; }
 
-    /* 3-Column Metrics Dashboard Bar */
-    .metrics-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.2fr;
-      background: var(--badge-bg);
-      border-radius: 8px;
-      padding: 6px 8px;
-      gap: 6px;
-      border: 1px solid var(--border-color);
-    }
-    .metric-cell {
-      display: flex;
-      flex-direction: column;
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge {
+      display: inline-flex;
       align-items: center;
-      text-align: center;
-      border-right: 1px solid var(--border-color);
-    }
-    .metric-cell:last-child {
-      border-right: none;
-    }
-    .metric-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      color: var(--text-muted);
-    }
-    .metric-value {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: var(--badge-bg);
       color: var(--text-main);
+      border: 1.5px solid var(--border-color);
     }
-    .metric-value.min-tag { color: var(--nhs-green); }
-    .metric-value.use-tag { color: var(--nhs-blue); }
+    .badge-green { background: #dcfce7; color: #14532d; border-color: #4ade80; }
+    .badge-blue { background: #dbeafe; color: #1e3a8a; border-color: #60a5fa; }
+    .badge-history { background: #fee2e2; color: #991b1b; border-color: #f87171; }
 
-    /* Unified Capsule Stepper */
-    .counter-capsule {
+    html.dark-mode .badge-green { background: #064e3b; color: #a7f3d0; border-color: #047857; }
+    html.dark-mode .badge-blue { background: #1e3a8a; color: #bfdbfe; border-color: #2563eb; }
+    html.dark-mode .badge-history { background: #7f1d1d; color: #fecaca; border-color: #b91c1c; }
+
+    /* Stepper Controls */
+    .counter-control {
       display: flex;
       align-items: center;
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-      background: var(--input-bg);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .counter-capsule:focus-within {
-      border-color: var(--nhs-blue);
-      box-shadow: 0 0 0 3px rgba(0, 94, 184, 0.15);
+      gap: 10px;
+      margin-top: 4px;
     }
     .counter-btn {
       background: var(--badge-bg);
       color: var(--text-main);
-      border: none;
+      border: 2px solid var(--border-color);
       width: 52px;
-      height: 46px;
-      font-size: 1.6rem;
+      height: 52px;
+      border-radius: 8px;
+      font-size: 1.8rem;
       font-weight: 900;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
       touch-action: manipulation;
-      user-select: none;
-      transition: background-color 0.1s;
     }
-    .counter-btn:active {
-      background: var(--border-color);
-    }
+    .counter-btn:active { background: var(--border-color); }
     .count-input {
       flex: 1;
-      height: 46px;
+      height: 52px;
       text-align: center;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: 900;
-      border: none !important;
-      background: transparent !important;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--input-bg);
       color: var(--text-main);
-      box-shadow: none !important;
-      padding: 0;
     }
 
-    /* Warning Alert Inside Card */
-    .item-warning-msg {
-      background: var(--nhs-amber-light);
-      border: 1px solid var(--nhs-amber-border);
-      color: #92400e;
-      font-size: 0.8rem;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 6px;
-      display: none;
-      line-height: 1.35;
-    }
-    html.dark-mode .item-warning-msg {
-      background: #451a03;
-      border-color: #78350f;
-      color: #fde68a;
-    }
-
-    .input-warning {
-      border-color: var(--nhs-amber) !important;
-      background-color: #fffbeb !important;
-    }
-    html.dark-mode .input-warning {
-      background-color: #3b1d06 !important;
-    }
-
-    /* 3-Column Adjustment Grid in Adjust View */
     .edit-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
       margin-top: 6px;
       background: var(--badge-bg);
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
-      border: 1px dashed var(--border-color);
+      border: 2px dashed var(--border-color);
     }
-    .edit-grid label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-align: center; justify-content: center; }
-    .edit-grid input { height: 44px; font-weight: 800; text-align: center; font-size: 1.1rem; padding: 4px; }
+    .edit-grid label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
+    .edit-grid input { height: 48px; font-weight: 800; text-align: center; font-size: 1.2rem; }
 
-    /* Button System */
     .btn {
       display: block;
       width: 100%;
       background: var(--nhs-blue);
       color: #ffffff;
       border: none;
-      border-radius: 10px;
-      padding: 15px;
-      font-size: 1.05rem;
-      font-weight: 800;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 900;
       cursor: pointer;
       text-align: center;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
       touch-action: manipulation;
-      transition: all 0.15s ease;
     }
-    .btn:active { transform: scale(0.98); opacity: 0.9; }
+    .btn:active { opacity: 0.85; }
     .btn-green { background: var(--nhs-green); }
     .btn-amber { background: var(--nhs-amber); }
     .btn-secondary { background: #475569; }
-    .btn-light-orange {
-      background: #ff9e42 !important;
-      color: #111827 !important;
-      border: 1px solid #f59e0b;
-    }
-    .btn-light-orange:active { background: #f59e0b !important; }
 
     .loader {
       display: none;
@@ -563,7 +290,7 @@
       padding: 24px;
       font-weight: 800;
       color: var(--nhs-blue);
-      font-size: 1.15rem;
+      font-size: 1.2rem;
     }
 
     #resultView, #adjustView, #settingsView { display: none; }
@@ -571,17 +298,17 @@
       width: 100%;
       border-collapse: collapse;
       margin: 15px 0;
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
     .outlook-table th, .outlook-table td {
       border: 1px solid var(--border-color);
       padding: 10px;
       text-align: left;
     }
-    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 800; }
-    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.1rem; }
+    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
+    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
 
-    /* Modal Backdrop & Dialog */
+    /* Modal Styles */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -595,48 +322,48 @@
     .modal-card {
       background: var(--card-bg);
       color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
       width: 100%;
-      max-width: 520px;
+      max-width: 550px;
       max-height: 85vh;
       overflow-y: auto;
       padding: 20px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
     }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 2px solid var(--border-color);
       padding-bottom: 10px;
       margin-bottom: 14px;
     }
     .modal-close-btn {
       background: transparent;
       border: none;
-      font-size: 1.5rem;
-      font-weight: 800;
+      font-size: 1.6rem;
+      font-weight: 900;
       cursor: pointer;
       color: var(--text-muted);
-      padding: 0 6px;
+      padding: 0 8px;
     }
     .modal-body {
-      font-size: 0.95rem;
+      font-size: 1rem;
       line-height: 1.6;
       white-space: pre-wrap;
       color: var(--text-main);
-      font-weight: 500;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Top Utility Toolbar -->
+  <!-- Top Toolbar -->
   <div class="a11y-bar">
     <div class="a11y-group">
-      <span class="a11y-label">Text:</span>
+      <span class="a11y-label">Font:</span>
       <button type="button" class="a11y-btn" onclick="stepFontSize(-2)">−Aa</button>
       <button type="button" class="a11y-btn" onclick="stepFontSize(2)">+Aa</button>
     </div>
@@ -650,13 +377,11 @@
     </div>
 
     <div class="a11y-group">
-      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
     </div>
   </div>
 
-  <!-- Header Banner -->
   <header>
-    <span class="header-badge">NHS Foundation Trust</span>
     <h1>STH MRI Consumables & IV Stock</h1>
     <p>Northern General • Royal Hallamshire • Weston Park</p>
   </header>
@@ -665,58 +390,39 @@
        VIEW 1: STOCK COUNT & ORDER VIEW
        ========================================= -->
   <div id="countView">
-    <!-- Top Action Buttons -->
     <div class="action-btn-row">
       <button type="button" class="btn btn-green btn-submit-order" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
       <button type="button" class="btn btn-amber btn-adjust-targets" onclick="switchTab('adjust')">🎯 Adjust Targets</button>
     </div>
 
-    <!-- Consolidated Session Setup Card -->
     <div class="card">
-      <div class="field-row">
-        <label for="staffName">
-          <span class="step-tag">1</span> Name: <span style="color:var(--nhs-red); margin-left:4px;">*</span>
-        </label>
-        <input type="text" id="staffName" placeholder="Your name here..." oninput="handleStaffNameInput()">
-      </div>
+      <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
+      <input type="text" id="staffName" placeholder="Your name here..." oninput="handleStaffNameInput()">
+    </div>
 
-      <div class="field-row">
-        <label for="siteSelect">
-          <span class="step-tag">2</span> Select Hospital Site:
-        </label>
-        <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
-          <option value="">-- Choose Hospital Site --</option>
-          <option value="NGH">Northern General Hospital (NGH)</option>
-          <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
-          <option value="WPH">Weston Park Hospital (WPH)</option>
-        </select>
-        
-        <!-- Site History Banner -->
-        <div id="siteHistoryBanner" class="site-history-banner"></div>
-      </div>
+    <div class="card">
+      <label for="siteSelect">2. Select Hospital Site:</label>
+      <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
     </div>
 
     <div id="lockNotice" class="lock-notice">
-      🔒 Please enter your Name above to unlock stock level entry.
+      🔒 Please enter your Name & Title above to unlock stock level entry.
     </div>
 
-    <!-- Live Search & Progress Dashboard Bar -->
-    <div class="search-progress-bar" id="searchBoxContainer">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="search" id="itemSearch" placeholder="Filter items (e.g. Dotarem, Saline, Primovist)..." oninput="filterItems()">
-      </div>
-      <div class="progress-pill" id="progressPill">
-        Counted: <strong id="countedTracker">0</strong>/<span id="totalTracker">0</span>
-      </div>
+    <div class="search-box" id="searchBoxContainer" style="display:none;">
+      <input type="search" id="itemSearch" placeholder="🔍 Filter items (e.g. Dotarem, Saline, Buscopan)..." oninput="filterItems()">
     </div>
 
-    <!-- Cards Container -->
     <div id="itemsContainer"></div>
 
-    <div class="card" id="notesCard">
+    <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
     </div>
   </div>
 
@@ -728,24 +434,22 @@
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <div class="card" style="border-left: 4px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 4px; font-weight: 800;">📊 Target Baselines & Actual Stock</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 500;">
-        Adjust <strong>Average Weekly Use</strong>, <strong>Minimum Target Stock Level</strong>, or enter <strong>Actual Current Stock</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab (Columns J, K, L).
+    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📊 Target Baselines (Usage & Min)</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
       </p>
 
-      <div class="field-row">
-        <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
-        <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
-          <option value="">-- Choose Site --</option>
-          <option value="NGH">Northern General Hospital (NGH)</option>
-          <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
-          <option value="WPH">Weston Park Hospital (WPH)</option>
-        </select>
-      </div>
+      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
 
-      <div class="field-row">
-        <label for="adjustStaffName">Superintendent / Editor Name: <span style="color:var(--nhs-red); margin-left:4px;">*</span></label>
+      <div style="margin-top: 12px;">
+        <label for="adjustStaffName">Superintendent / Editor Name:</label>
         <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
       </div>
     </div>
@@ -753,7 +457,7 @@
     <div id="adjustItemsContainer"></div>
 
     <div class="card" id="adjustSubmitCard" style="display:none;">
-      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target & Stock Changes to Google Sheet</button>
+      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
     </div>
   </div>
 
@@ -765,16 +469,16 @@
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <div class="card" style="border-left: 4px solid var(--nhs-blue);">
-      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 4px; font-weight: 800;">📧 Email Order Configuration</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 500;">
+    <div class="card" style="border-left: 6px solid var(--nhs-blue);">
+      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email Order Configuration</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
         Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
       </p>
 
       <div style="margin-bottom: 10px;">
         <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
         <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
-        <span style="font-size: 0.72rem; color: var(--text-muted); display:block; margin-top:3px;">Note: For RHH and WPH, the To field will automatically remain blank.</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Note: For RHH and WPH, the To field will automatically remain blank.</span>
       </div>
 
       <div style="margin-bottom: 10px;">
@@ -785,7 +489,7 @@
       <div style="margin-bottom: 10px;">
         <label for="cfgEmailSubject">Email Title / Subject Line:</label>
         <input type="text" id="cfgEmailSubject" placeholder="IV Fluids Stock order {todays date}">
-        <span style="font-size: 0.72rem; color: var(--text-muted); display:block; margin-top:3px;">Use <code>{todays date}</code> to insert the current date automatically.</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Use <code>{todays date}</code> to insert the current date automatically.</span>
       </div>
 
       <div style="margin-bottom: 12px;">
@@ -805,7 +509,7 @@
         <textarea id="cfgGuidanceText" rows="4" placeholder="Instructions here..."></textarea>
       </div>
 
-      <button type="button" class="btn btn-secondary" style="padding:12px; font-size:0.95rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
+      <button type="button" class="btn btn-secondary" style="padding:12px; font-size:1rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
     </div>
   </div>
 
@@ -815,16 +519,16 @@
        VIEW 4: RESULTS VIEW
        ========================================= -->
   <div id="resultView" class="card">
-    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">Stock Ledger Updated</h2>
-    <p style="font-size: 0.9rem; margin-bottom: 14px; font-weight: 600; color: var(--text-muted);">
+    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
+    <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
       Your stock levels have been saved to the ledger. Dispatch the order below:
     </p>
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
-    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
-    <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
+    <button type="button" class="btn" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
 
@@ -832,7 +536,7 @@
 <div id="guidanceModal" class="modal-backdrop" onclick="closeGuidanceModal(event)">
   <div class="modal-card">
     <div class="modal-header">
-      <h2 id="guidanceHeadingText" style="color:var(--nhs-blue); font-size:1.2rem; font-weight:800;">Stock Ordering Guidance</h2>
+      <h2 id="guidanceHeadingText" style="color:var(--nhs-blue); font-size:1.25rem; font-weight:900;">Stock Ordering Guidance</h2>
       <button type="button" class="modal-close-btn" onclick="hideGuidanceModal()">✕</button>
     </div>
     <div id="guidanceBodyText" class="modal-body">
@@ -845,7 +549,7 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
-  let rawStockData = { items: [], lastHistory: {}, lastSiteOrder: {} };
+  let rawStockData = { items: [], lastHistory: {} };
   let currentGeneratedOrders = [];
   let currentFontPx = 16;
   let currentViewMode = "count";
@@ -889,7 +593,7 @@
     document.body.classList.toggle('dark-mode', isDark);
 
     const btn = document.getElementById('themeBtn');
-    if (btn) btn.innerText = isDark ? "☀️" : "🌙";
+    if (btn) btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
     try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
   }
 
@@ -905,7 +609,7 @@
         document.documentElement.classList.add('dark-mode');
         document.body.classList.add('dark-mode');
         const btn = document.getElementById('themeBtn');
-        if (btn) btn.innerText = "☀️";
+        if (btn) btn.innerText = "☀️ Light Mode";
       }
     } catch(e) {}
 
@@ -947,7 +651,6 @@
     let val = parseFloat(input.value) || 0;
     val = Math.max(0, val + change);
     input.value = val;
-    handleStockInputEvents(input);
   }
 
   function onStockInputFocus(input) {
@@ -957,84 +660,9 @@
     }
   }
 
-  function handleStockInputEvents(input) {
-    validateStockPlausibility(input);
-    updateCountedState(input);
-    updateProgressTracker();
-  }
-
-  function updateCountedState(input) {
-    const card = input.closest('.item-card');
-    if (input.value.trim() !== "") {
-      card.classList.add('is-counted');
-    } else {
-      card.classList.remove('is-counted');
-    }
-  }
-
-  function updateProgressTracker() {
-    const inputs = document.querySelectorAll('.stock-input');
-    let counted = 0;
-    inputs.forEach(inp => {
-      if (inp.value.trim() !== "") counted++;
-    });
-    const tracker = document.getElementById('countedTracker');
-    const totalTracker = document.getElementById('totalTracker');
-    if (tracker && totalTracker) {
-      tracker.innerText = counted;
-      totalTracker.innerText = inputs.length;
-    }
-  }
-
   // ==========================================
-  // REAL-TIME STOCK PLAUSIBILITY CHECK
+  // VIEW SWITCHING
   // ==========================================
-  function getWeeksElapsedForSite(site) {
-    if (rawStockData.lastSiteOrder && rawStockData.lastSiteOrder[site] && rawStockData.lastSiteOrder[site].isoDate) {
-      const lastDate = new Date(rawStockData.lastSiteOrder[site].isoDate);
-      const diffMs = new Date() - lastDate;
-      const days = Math.max(1, diffMs / (1000 * 60 * 60 * 24));
-      return Math.max(0.5, days / 7);
-    }
-    return 1.0;
-  }
-
-  function validateStockPlausibility(input) {
-    const card = input.closest('.item-card');
-    const capsule = input.closest('.counter-capsule');
-    const warningDiv = card.querySelector('.item-warning-msg');
-    const valStr = input.value.trim();
-
-    if (valStr === "") {
-      if (capsule) capsule.classList.remove('input-warning');
-      if (warningDiv) warningDiv.style.display = "none";
-      return true;
-    }
-
-    const enteredVal = parseFloat(valStr);
-    const lastStock = parseFloat(input.dataset.lastStock || "0");
-    const weeklyUse = parseFloat(input.dataset.weeklyUse || "0");
-    const site = document.getElementById("siteSelect").value;
-    const weeksElapsed = getWeeksElapsedForSite(site);
-
-    if (lastStock > 0 && weeklyUse > 0) {
-      const expectedMin = Math.max(0, Math.floor(lastStock - (weeklyUse * weeksElapsed * 2.0)));
-
-      if (enteredVal < expectedMin) {
-        if (capsule) capsule.classList.add('input-warning');
-        if (warningDiv) {
-          warningDiv.innerText = `⚠️ Warning: Count (${enteredVal}) seems unusually low. Expected ≥ ${expectedMin} based on previous stock (${lastStock}) and usage (~${weeklyUse}/wk). Please verify!`;
-          warningDiv.style.display = "block";
-        }
-        return false;
-      }
-    }
-
-    if (capsule) capsule.classList.remove('input-warning');
-    if (warningDiv) warningDiv.style.display = "none";
-    return true;
-  }
-
   function toggleSettingsView() {
     if (currentViewMode === "settings") {
       switchTab("count");
@@ -1079,31 +707,8 @@
   }
 
   function handleSiteSelectChange(val) {
-    document.getElementById("searchBoxContainer").style.display = val ? "flex" : "none";
-    updateSiteHistoryBanner(val);
+    document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
     renderItems();
-  }
-
-  function updateSiteHistoryBanner(site) {
-    const banner = document.getElementById("siteHistoryBanner");
-    if (!site) {
-      banner.style.display = "none";
-      return;
-    }
-
-    if (rawStockData.lastSiteOrder && rawStockData.lastSiteOrder[site]) {
-      const h = rawStockData.lastSiteOrder[site];
-      let timeAgo = "";
-      if (h.isoDate) {
-        const days = Math.round((new Date() - new Date(h.isoDate)) / (1000 * 60 * 60 * 24));
-        timeAgo = days === 0 ? " (Today)" : days === 1 ? " (Yesterday)" : ` (${days} days ago)`;
-      }
-      banner.innerHTML = `📅 <strong>Last Count for ${site}:</strong> ${h.date} by <strong>${h.staff}</strong>${timeAgo}`;
-      banner.style.display = "block";
-    } else {
-      banner.innerHTML = `📅 <strong>Last Count for ${site}:</strong> No previous record logged in ledger.`;
-      banner.style.display = "block";
-    }
   }
 
   function handleAdjustSiteChange(val) {
@@ -1128,9 +733,6 @@
           document.getElementById("cfgGuidanceHeading").value = guidanceContent.heading;
           document.getElementById("cfgGuidanceText").value = guidanceContent.text;
         }
-
-        const site = document.getElementById("siteSelect").value;
-        updateSiteHistoryBanner(site);
 
         renderItems();
         renderAdjustItems();
@@ -1176,49 +778,26 @@
       const minTarget = item.minTarget[site] || 0;
       const key = `${site}_${itemName}_${itemDesc}`;
 
-      let currentKnownStock = 0;
-      let historyText = "0";
-
-      if (item.currentStock && item.currentStock[site] !== "") {
-        currentKnownStock = parseFloat(item.currentStock[site]);
-        historyText = `${currentKnownStock}`;
-      } else if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
+      let historyText = "No previous record";
+      if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
-        const countMatch = String(h.value).match(/Count:\s*(\d+(\.\d+)?)/i);
-        if (countMatch) {
-          currentKnownStock = parseFloat(countMatch[1]);
-          historyText = `${currentKnownStock}`;
-        }
+        historyText = `Last: ${h.value} (${h.date})`;
       }
 
       const itemCard = document.createElement("div");
       itemCard.className = "item-card";
       itemCard.setAttribute("data-search", `${itemName} ${itemDesc}`);
       itemCard.innerHTML = `
-        <div class="item-header">
-          <div>
-            <div class="item-title">${itemName}</div>
-            <div class="item-meta">${itemDesc} <span class="pack-tag">${packSize}</span></div>
-          </div>
-          <span class="counted-badge">✓ Counted</span>
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
         </div>
-
-        <div class="metrics-bar">
-          <div class="metric-cell">
-            <span class="metric-label">Min Target</span>
-            <span class="metric-value min-tag">${minTarget}</span>
-          </div>
-          <div class="metric-cell">
-            <span class="metric-label">Weekly Use</span>
-            <span class="metric-value use-tag">~${weeklyUse}</span>
-          </div>
-          <div class="metric-cell">
-            <span class="metric-label">On File</span>
-            <span class="metric-value">${historyText}</span>
-          </div>
+        <div class="badge-row">
+          <span class="badge badge-green">Min Target: ${minTarget}</span>
+          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
+          <span class="badge badge-history">${historyText}</span>
         </div>
-
-        <div class="counter-capsule">
+        <div class="counter-control">
           <button type="button" class="counter-btn" onclick="stepCount(this, -1)">−</button>
           <input type="number" min="0" class="count-input stock-input" 
             data-item="${itemName}" 
@@ -1226,20 +805,15 @@
             data-pack="${packSize}" 
             data-min-target="${minTarget}"
             data-weekly-use="${weeklyUse}" 
-            data-last-stock="${currentKnownStock}"
             placeholder="Qty"
-            onfocus="onStockInputFocus(this)"
-            oninput="handleStockInputEvents(this)">
+            onfocus="onStockInputFocus(this)">
           <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
         </div>
-
-        <div class="item-warning-msg"></div>
       `;
       container.appendChild(itemCard);
     });
 
     filterItems();
-    updateProgressTracker();
   }
 
   function renderAdjustItems() {
@@ -1261,53 +835,28 @@
       const packSize = item.pack;
       const weeklyUse = item.weeklyUse[site] || 0;
       const minTarget = item.minTarget[site] || 0;
-      const key = `${site}_${itemName}_${itemDesc}`;
-
-      let currentStockVal = "";
-      if (item.currentStock && item.currentStock[site] !== "") {
-        currentStockVal = item.currentStock[site];
-      } else if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
-        const h = rawStockData.lastHistory[key];
-        const countMatch = String(h.value).match(/Count:\s*(\d+(\.\d+)?)/i);
-        if (countMatch) {
-          currentStockVal = countMatch[1];
-        } else if (!isNaN(h.value) && h.value !== "") {
-          currentStockVal = h.value;
-        }
-      }
 
       const card = document.createElement("div");
       card.className = "item-card";
       card.innerHTML = `
-        <div class="item-header">
-          <div>
-            <div class="item-title">${itemName}</div>
-            <div class="item-meta">${itemDesc} <span class="pack-tag">${packSize}</span></div>
-          </div>
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
         </div>
-
         <div class="edit-grid">
           <div>
-            <label>Avg Weekly:</label>
+            <label>Avg Weekly Use:</label>
             <input type="number" step="any" min="0" class="adjust-weekly-input" 
               data-item="${itemName}" 
               data-desc="${itemDesc}" 
               value="${weeklyUse}">
           </div>
           <div>
-            <label>Min Target:</label>
+            <label>Min Target Stock:</label>
             <input type="number" step="any" min="0" class="adjust-min-input" 
               data-item="${itemName}" 
               data-desc="${itemDesc}" 
               value="${minTarget}">
-          </div>
-          <div>
-            <label>Actual Stock:</label>
-            <input type="number" step="any" min="0" class="adjust-stock-input" 
-              data-item="${itemName}" 
-              data-desc="${itemDesc}" 
-              placeholder="${currentStockVal !== '' ? currentStockVal : 'Qty'}" 
-              value="${currentStockVal !== '' ? currentStockVal : ''}">
           </div>
         </div>
       `;
@@ -1361,11 +910,10 @@
     if (!site) { alert("Please select a site."); return; }
 
     const staffName = document.getElementById("adjustStaffName").value.trim();
-    if (!staffName) { alert("Please enter the Superintendent / Editor name."); return; }
+    if (!staffName) { alert("Please enter your name/title."); return; }
 
     const weeklyInputs = document.querySelectorAll(".adjust-weekly-input");
     const minInputs = document.querySelectorAll(".adjust-min-input");
-    const stockInputs = document.querySelectorAll(".adjust-stock-input");
     const updates = [];
 
     for (let i = 0; i < weeklyInputs.length; i++) {
@@ -1373,14 +921,13 @@
         item: weeklyInputs[i].dataset.item,
         desc: weeklyInputs[i].dataset.desc,
         weeklyUse: weeklyInputs[i].value,
-        minTarget: minInputs[i].value,
-        currentStock: stockInputs[i] ? stockInputs[i].value.trim() : ""
+        minTarget: minInputs[i].value
       });
     }
 
-    if (!confirm(`Save revised Weekly Use, Min Targets & Actual Stock for ${site}?`)) return;
+    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
 
-    showLoading(true, `Saving parameters and stock levels for ${site} to Google Sheet...`);
+    showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
 
     try {
       const res = await fetch(API_URL, {
@@ -1402,7 +949,7 @@
         alert("Failed to update: " + data.message);
       }
     } catch (e) {
-      alert("Error saving baselines & stock: " + e.message);
+      alert("Error saving baselines: " + e.message);
     } finally {
       showLoading(false);
     }
@@ -1417,7 +964,6 @@
     const staffName = document.getElementById("staffName").value.trim();
     const inputs = document.querySelectorAll(".stock-input");
     const payloadItems = [];
-    const suspiciousItems = [];
 
     inputs.forEach(inp => {
       if (inp.value !== "") {
@@ -1429,27 +975,12 @@
           weeklyUse: inp.dataset.weeklyUse,
           current: inp.value
         });
-
-        const card = inp.closest('.item-card');
-        const warningDiv = card ? card.querySelector('.item-warning-msg') : null;
-        if (warningDiv && warningDiv.style.display === "block") {
-          suspiciousItems.push(`- ${inp.dataset.item} (${inp.dataset.desc}): Count entered is ${inp.value}`);
-        }
       }
     });
 
     if (payloadItems.length === 0) {
       alert("Please enter a stock level count for at least one item.");
       return;
-    }
-
-    if (suspiciousItems.length > 0) {
-      const confirmMsg = "⚠️ ATTENTION: The following stock count(s) appear unusually low compared to historical usage:\n\n" +
-                         suspiciousItems.join("\n") +
-                         "\n\nAre you sure you have counted these cupboards correctly?";
-      if (!confirm(confirmMsg)) {
-        return;
-      }
     }
 
     const payload = {
