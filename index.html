@@ -102,30 +102,6 @@
     header h1 { font-size: 1.3rem; font-weight: 900; }
     header p { font-size: 0.9rem; opacity: 0.95; margin-top: 4px; font-weight: 600; }
 
-    /* Top Action Buttons (2/3 and 1/3 split) */
-    .action-btn-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      align-items: stretch;
-    }
-    .btn-submit-order {
-      flex: 2;
-      margin-top: 0 !important;
-      padding: 14px 8px !important;
-      font-size: 1rem !important;
-    }
-    .btn-adjust-targets {
-      flex: 1;
-      margin-top: 0 !important;
-      padding: 14px 6px !important;
-      font-size: 0.85rem !important;
-      background: var(--nhs-amber) !important;
-    }
-    .btn-adjust-targets:active {
-      opacity: 0.85;
-    }
-
     .card {
       background: var(--card-bg);
       border-radius: 8px;
@@ -149,7 +125,6 @@
       -webkit-appearance: none;
     }
 
-    /* Required Input Visual State */
     .input-required {
       border: 2px solid var(--nhs-red) !important;
       background-color: #fff5f5 !important;
@@ -286,7 +261,6 @@
     .btn-amber { background: var(--nhs-amber); }
     .btn-secondary { background: #475569; }
 
-    /* Light Orange Button Styling */
     .btn-light-orange {
       background: #ff9e42 !important;
       color: #111827 !important;
@@ -305,7 +279,7 @@
       font-size: 1.2rem;
     }
 
-    #resultView, #adjustView, #settingsView { display: none; }
+    #resultView, #settingsView { display: none; }
     .outlook-table {
       width: 100%;
       border-collapse: collapse;
@@ -402,10 +376,8 @@
        VIEW 1: STOCK COUNT & ORDER VIEW
        ========================================= -->
   <div id="countView">
-    <div class="action-btn-row">
-      <button type="button" class="btn btn-green btn-submit-order" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
-      <button type="button" class="btn btn-amber btn-adjust-targets" onclick="switchTab('adjust')">🎯 Adjust Targets</button>
-    </div>
+    <!-- Full-Width Calculate & Submit Button -->
+    <button type="button" class="btn btn-green" style="margin-bottom: 12px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
 
     <div class="card">
       <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
@@ -434,20 +406,21 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
     </div>
   </div>
 
   <!-- =========================================
-       VIEW 2: STOCK LEVEL & TARGET ADJUSTMENTS VIEW
+       VIEW 2: COMBINED SETTINGS & TARGET ADJUSTMENTS VIEW
        ========================================= -->
-  <div id="adjustView">
+  <div id="settingsView">
     <div style="margin-bottom: 12px;">
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
+    <!-- 1. Stock Target Baselines Section -->
     <div class="card" style="border-left: 6px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📊 Target Baselines (Usage & Min)</h3>
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">🎯 Stock Target Baselines (Usage & Min)</h3>
       <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
         Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
       </p>
@@ -471,18 +444,10 @@
     <div class="card" id="adjustSubmitCard" style="display:none;">
       <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
     </div>
-  </div>
 
-  <!-- =========================================
-       VIEW 3: SETTINGS VIEW (Email & App Config)
-       ========================================= -->
-  <div id="settingsView">
-    <div style="margin-bottom: 12px;">
-      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
-    </div>
-
+    <!-- 2. Email & Guidance Configuration Section -->
     <div class="card" style="border-left: 6px solid var(--nhs-blue);">
-      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email Order Configuration</h3>
+      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email & Guidance Configuration</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
         Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
       </p>
@@ -523,17 +488,21 @@
 
       <button type="button" class="btn btn-secondary" style="padding:12px; font-size:1rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
     </div>
+
+    <div style="margin-top: 12px;">
+      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
+    </div>
   </div>
 
   <div id="loading" class="loader">Connecting to Google Sheet...</div>
 
   <!-- =========================================
-       VIEW 4: RESULTS VIEW
+       VIEW 3: RESULTS VIEW
        ========================================= -->
   <div id="resultView" class="card">
     <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
     <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
-      Your current stock levels and order quantities have been saved to Columns D & E in the ledger. Dispatch the order below:
+      Your stock levels have been saved to the ledger. Dispatch the order below:
     </p>
 
     <div id="tableContainer"></div>
@@ -674,6 +643,9 @@
     }
   }
 
+  // ==========================================
+  // VIEW SWITCHING
+  // ==========================================
   function toggleSettingsView() {
     if (currentViewMode === "settings") {
       switchTab("count");
@@ -689,7 +661,6 @@
 
     document.getElementById("countView").style.display = (mode === "count") ? "block" : "none";
     document.getElementById("settingsView").style.display = (mode === "settings") ? "block" : "none";
-    document.getElementById("adjustView").style.display = (mode === "adjust") ? "block" : "none";
 
     if (settingsBtn) {
       if (mode === "settings") {
@@ -701,7 +672,7 @@
 
     if (mode === "count") {
       renderItems();
-    } else if (mode === "adjust") {
+    } else if (mode === "settings") {
       const currentSite = document.getElementById("siteSelect").value;
       if (currentSite) {
         document.getElementById("adjustSiteSelect").value = currentSite;
@@ -758,8 +729,8 @@
   }
 
   function updateSettingsFields() {
-    document.getElementById("cfgToEmail").value = emailSettings.toEmail;
     document.getElementById("cfgCcEmail").value = emailSettings.ccEmail;
+    document.getElementById("cfgToEmail").value = emailSettings.toEmail;
     document.getElementById("cfgEmailSubject").value = emailSettings.emailSubject;
     document.getElementById("cfgEmailBody").value = emailSettings.emailBody;
   }
@@ -783,357 +754,4 @@
 
     rawStockData.items.forEach((item) => {
       const itemName = item.item;
-      const itemDesc = item.desc;
-      const packSize = item.pack;
-      const weeklyUse = item.weeklyUse[site] || 0;
-      const minTarget = item.minTarget[site] || 0;
-      const key = `${site}_${itemName}_${itemDesc}`;
-
-      let historyText = "No previous count";
-      if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
-        const h = rawStockData.lastHistory[key];
-        historyText = `Last Stock: ${h.value} (${h.date})`;
-      }
-
-      const itemCard = document.createElement("div");
-      itemCard.className = "item-card";
-      itemCard.setAttribute("data-search", `${itemName} ${itemDesc}`);
-      itemCard.innerHTML = `
-        <div>
-          <div class="item-title">${itemName}</div>
-          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
-        </div>
-        <div class="badge-row">
-          <span class="badge badge-green">Min Target: ${minTarget}</span>
-          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
-          <span class="badge badge-history">${historyText}</span>
-        </div>
-        <div class="counter-control">
-          <button type="button" class="counter-btn" onclick="stepCount(this, -1)">−</button>
-          <input type="number" min="0" class="count-input stock-input" 
-            data-item="${itemName}" 
-            data-desc="${itemDesc}" 
-            data-pack="${packSize}" 
-            data-min-target="${minTarget}"
-            data-weekly-use="${weeklyUse}" 
-            placeholder="Qty (0 if none)"
-            onfocus="onStockInputFocus(this)"
-            oninput="this.classList.remove('input-required')">
-          <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
-        </div>
-      `;
-      container.appendChild(itemCard);
-    });
-
-    filterItems();
-  }
-
-  function renderAdjustItems() {
-    const site = document.getElementById("adjustSiteSelect").value;
-    const container = document.getElementById("adjustItemsContainer");
-    const submitCard = document.getElementById("adjustSubmitCard");
-    container.innerHTML = "";
-
-    if (!site || !rawStockData.items) {
-      submitCard.style.display = "none";
-      return;
-    }
-
-    submitCard.style.display = "block";
-
-    rawStockData.items.forEach((item) => {
-      const itemName = item.item;
-      const itemDesc = item.desc;
-      const packSize = item.pack;
-      const weeklyUse = item.weeklyUse[site] || 0;
-      const minTarget = item.minTarget[site] || 0;
-
-      const card = document.createElement("div");
-      card.className = "item-card";
-      card.innerHTML = `
-        <div>
-          <div class="item-title">${itemName}</div>
-          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
-        </div>
-        <div class="edit-grid">
-          <div>
-            <label>Avg Weekly Use:</label>
-            <input type="number" step="any" min="0" class="adjust-weekly-input" 
-              data-item="${itemName}" 
-              data-desc="${itemDesc}" 
-              value="${weeklyUse}">
-          </div>
-          <div>
-            <label>Min Target Stock:</label>
-            <input type="number" step="any" min="0" class="adjust-min-input" 
-              data-item="${itemName}" 
-              data-desc="${itemDesc}" 
-              value="${minTarget}">
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  }
-
-  async function saveEmailConfigToSheet() {
-    const to = document.getElementById("cfgToEmail").value.trim() || "tim.jones17@nhs.net, lauren.mills6@nhs.net";
-    const cc = document.getElementById("cfgCcEmail").value.trim() || "sth.mrisuperintendents@nhs.net";
-    const sub = document.getElementById("cfgEmailSubject").value.trim() || "IV Fluids Stock order {todays date}";
-    const body = document.getElementById("cfgEmailBody").value.trim() || "Here is this weeks order for IV Fluids for MRI:";
-    const heading = document.getElementById("cfgGuidanceHeading").value.trim() || "Stock Ordering Guidance";
-    const guidanceTxt = document.getElementById("cfgGuidanceText").value.trim() || "";
-
-    showLoading(true, "Saving email configuration & guidance permanently to Google Sheet...");
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        redirect: "follow",
-        body: JSON.stringify({
-          action: "updateEmailSettings",
-          toEmail: to,
-          ccEmail: cc,
-          emailSubject: sub,
-          emailBody: body,
-          guidanceHeading: heading,
-          guidanceText: guidanceTxt
-        })
-      });
-      const data = await res.json();
-
-      if (data.status === "success") {
-        emailSettings = { toEmail: to, ccEmail: cc, emailSubject: sub, emailBody: body };
-        guidanceContent = { heading: heading, text: guidanceTxt };
-        updateSettingsFields();
-        alert(data.message);
-      } else {
-        alert("Failed to save: " + data.message);
-      }
-    } catch(e) {
-      alert("Error saving settings: " + e.message);
-    } finally {
-      showLoading(false);
-    }
-  }
-
-  async function submitBaselineAdjustments() {
-    const site = document.getElementById("adjustSiteSelect").value;
-    if (!site) { alert("Please select a site."); return; }
-
-    const staffName = document.getElementById("adjustStaffName").value.trim();
-    if (!staffName) { alert("Please enter your name/title."); return; }
-
-    const weeklyInputs = document.querySelectorAll(".adjust-weekly-input");
-    const minInputs = document.querySelectorAll(".adjust-min-input");
-    const updates = [];
-
-    for (let i = 0; i < weeklyInputs.length; i++) {
-      updates.push({
-        item: weeklyInputs[i].dataset.item,
-        desc: weeklyInputs[i].dataset.desc,
-        weeklyUse: weeklyInputs[i].value,
-        minTarget: minInputs[i].value
-      });
-    }
-
-    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
-
-    showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        redirect: "follow",
-        body: JSON.stringify({
-          action: "updateBaselines",
-          site: site,
-          staffName: staffName,
-          updates: updates
-        })
-      });
-      const data = await res.json();
-
-      if (data.status === "success") {
-        alert(data.message);
-        await fetchCatalog();
-      } else {
-        alert("Failed to update: " + data.message);
-      }
-    } catch (e) {
-      alert("Error saving baselines: " + e.message);
-    } finally {
-      showLoading(false);
-    }
-  }
-
-  /**
-   * Enforces that ALL items must have a quantity entered (even if 0)
-   */
-  async function submitStockForm() {
-    if (!requireStaffName()) return;
-
-    const site = document.getElementById("siteSelect").value;
-    if (!site) { 
-      alert("Please select a hospital site."); 
-      document.getElementById("siteSelect").focus();
-      return; 
-    }
-
-    const staffName = document.getElementById("staffName").value.trim();
-    const inputs = document.querySelectorAll(".stock-input");
-    const payloadItems = [];
-    let missingInput = null;
-
-    inputs.forEach(inp => {
-      const val = inp.value.trim();
-      if (val === "" || isNaN(val)) {
-        inp.classList.add("input-required");
-        if (!missingInput) missingInput = inp;
-      } else {
-        inp.classList.remove("input-required");
-        payloadItems.push({
-          item: inp.dataset.item,
-          desc: inp.dataset.desc,
-          pack: inp.dataset.pack,
-          minTarget: inp.dataset.minTarget,
-          weeklyUse: inp.dataset.weeklyUse,
-          current: Number(val)
-        });
-      }
-    });
-
-    if (missingInput) {
-      alert("Please enter a stock level for ALL items. If there is no stock, enter 0.");
-      missingInput.focus();
-      missingInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
-    const payload = {
-      action: "submitStockOrder",
-      site: site,
-      staffName: staffName,
-      notes: document.getElementById("orderNotes").value.trim(),
-      items: payloadItems
-    };
-
-    showLoading(true, "Updating 2-column ledger & calculating order...");
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        redirect: "follow",
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (data.status === "success") {
-        currentGeneratedOrders = data.orders;
-        displayResults(data);
-      } else {
-        alert("Failed to process order: " + data.message);
-      }
-    } catch (e) {
-      alert("Error submitting stock count: " + e.message);
-    } finally {
-      showLoading(false);
-    }
-  }
-
-  function displayResults(data) {
-    document.getElementById("countView").style.display = "none";
-    document.getElementById("adjustView").style.display = "none";
-    document.getElementById("settingsView").style.display = "none";
-    document.getElementById("resultView").style.display = "block";
-
-    let html = "";
-    if (data.orders.length === 0) {
-      html = "<p style='font-size:1.15rem; font-weight:700;'>All stock levels are above minimum targets. No items require ordering.</p>";
-    } else {
-      html += `
-        <table id="orderTablePreview" class="outlook-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Description</th>
-              <th>Pack</th>
-              <th>Order Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      data.orders.forEach(r => {
-        html += `
-          <tr>
-            <td><strong>${r[0]}</strong></td>
-            <td>${r[1]}</td>
-            <td>${r[2]}</td>
-            <td class="highlight-qty">${r[3]}</td>
-          </tr>
-        `;
-      });
-      html += "</tbody></table>";
-    }
-
-    document.getElementById("tableContainer").innerHTML = html;
-  }
-
-  function copyTableToClipboard() {
-    const table = document.getElementById("orderTablePreview");
-    if (!table) { alert("No order table to copy."); return; }
-
-    const range = document.createRange();
-    range.selectNode(table);
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-
-    try {
-      document.execCommand("copy");
-      alert("Order table copied to clipboard! Paste directly into Outlook.");
-    } catch (err) {
-      alert("Please copy manually from the screen.");
-    }
-    window.getSelection().removeAllRanges();
-  }
-
-  function openMailtoClient() {
-    const site = document.getElementById("siteSelect").value;
-    const todayStr = new Date().toLocaleDateString('en-GB');
-
-    let subject = emailSettings.emailSubject.replace(/\{todays date\}/gi, todayStr)
-                                           .replace(/\{date\}/gi, todayStr)
-                                           .replace(/\{site\}/gi, site);
-
-    let bodyText = `${emailSettings.emailBody}\n\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
-    currentGeneratedOrders.forEach(o => {
-      bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
-    });
-    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
-
-    const effectiveTo = getEffectiveToEmail(site);
-    const mailtoUrl = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-
-    const tempLink = document.createElement('a');
-    tempLink.href = mailtoUrl;
-    tempLink.target = '_top';
-    tempLink.rel = 'noopener noreferrer';
-    document.body.appendChild(tempLink);
-    tempLink.click();
-    document.body.removeChild(tempLink);
-  }
-
-  function showLoading(show, text = "") {
-    const l = document.getElementById("loading");
-    l.innerText = text;
-    l.style.display = show ? "block" : "none";
-  }
-
-  function resetApp() {
-    document.getElementById("resultView").style.display = "none";
-    switchTab('count');
-    fetchCatalog();
-  }
-</script>
-</body>
-</html>
+      const itemD
