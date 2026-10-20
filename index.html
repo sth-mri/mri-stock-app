@@ -156,6 +156,25 @@
       border-color: #92400e;
     }
 
+    /* Warning for duplicate order placed in last 3-4 days */
+    .recent-order-alert {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      color: #78350f;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      display: none;
+      line-height: 1.4;
+    }
+    html.dark-mode .recent-order-alert, body.dark-mode .recent-order-alert {
+      background: #451a03;
+      border-color: #d97706;
+      color: #fef3c7;
+    }
+
     .search-box {
       margin-bottom: 12px;
       position: sticky;
@@ -249,7 +268,7 @@
     .edit-grid label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
     .edit-grid input { height: 48px; font-weight: 800; text-align: center; font-size: 1.2rem; }
 
-    /* Buttons */
+    /* Button Styles */
     .btn {
       display: block;
       width: 100%;
@@ -268,6 +287,7 @@
     .btn:active { opacity: 0.85; }
     .btn-green { background: var(--nhs-green); }
     .btn-amber { background: var(--nhs-amber); }
+    .btn-teal { background: #0284c7; }
     .btn-secondary { background: #475569; }
 
     html.dark-mode .btn-secondary, body.dark-mode .btn-secondary {
@@ -314,7 +334,7 @@
       color: #f87171;
     }
 
-    /* Modal Styles */
+    /* Modal Backdrop & Cards */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -331,8 +351,8 @@
       border: 2px solid var(--border-color);
       border-radius: 10px;
       width: 100%;
-      max-width: 550px;
-      max-height: 85vh;
+      max-width: 580px;
+      max-height: 88vh;
       overflow-y: auto;
       padding: 20px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.4);
@@ -360,6 +380,18 @@
       white-space: pre-wrap;
       color: var(--text-main);
       font-weight: 600;
+    }
+
+    .delivery-item-row {
+      background: var(--badge-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
   </style>
 </head>
@@ -396,7 +428,9 @@
        VIEW 1: STOCK COUNT & ORDER VIEW
        ========================================= -->
   <div id="countView">
-    <button type="button" class="btn btn-green" style="margin-bottom: 12px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+    <!-- Top Action Buttons -->
+    <button type="button" class="btn btn-green" style="margin-bottom: 8px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+    <button type="button" class="btn btn-teal" style="margin-bottom: 14px;" onclick="openReceiveDeliveryModal()">📦 Check Received Delivery</button>
 
     <div class="card">
       <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
@@ -412,6 +446,9 @@
         <option value="WPH">Weston Park Hospital (WPH)</option>
       </select>
     </div>
+
+    <!-- Duplicate Order Warning Banner (shown if order placed in last 3-4 days) -->
+    <div id="recentOrderBanner" class="recent-order-alert"></div>
 
     <div id="lockNotice" class="lock-notice">
       🔒 Please enter your Name & Title above to unlock stock level entry.
@@ -539,7 +576,42 @@
   </div>
 </div>
 
-<!-- Guidance Modal -->
+<!-- =========================================
+     MODAL 1: CHECK RECEIVED DELIVERY MODAL
+     ========================================= -->
+<div id="deliveryModal" class="modal-backdrop" onclick="closeDeliveryModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 style="color:var(--nhs-blue); font-size:1.25rem; font-weight:900;">📦 Check Order Delivery / Receipt</h2>
+      <button type="button" class="modal-close-btn" onclick="hideDeliveryModal()">✕</button>
+    </div>
+    
+    <div style="margin-bottom: 12px;">
+      <label for="deliverySiteSelect">Hospital Site:</label>
+      <select id="deliverySiteSelect" onchange="renderDeliveryCheckItems(this.value)">
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+    </div>
+
+    <div id="deliveryOrderMeta" style="font-size:0.9rem; font-weight:700; color:var(--text-muted); margin-bottom:12px; background:var(--badge-bg); padding:10px; border-radius:6px;"></div>
+
+    <div id="deliveryItemsContainer"></div>
+
+    <div id="deliveryReconciliationReport" style="display:none; margin-top:14px; padding:12px; border-radius:8px;"></div>
+
+    <div id="deliveryActionButtons" style="margin-top:14px; display:none;">
+      <button type="button" class="btn btn-green" onclick="reconcileDelivery()">Verify & Check Shortfall</button>
+    </div>
+
+    <button type="button" class="btn btn-secondary" style="margin-top:12px;" onclick="hideDeliveryModal()">Close</button>
+  </div>
+</div>
+
+<!-- =========================================
+     MODAL 2: GUIDANCE MODAL
+     ========================================= -->
 <div id="guidanceModal" class="modal-backdrop" onclick="closeGuidanceModal(event)">
   <div class="modal-card">
     <div class="modal-header">
@@ -556,7 +628,7 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
-  let rawStockData = { items: [], lastHistory: {} };
+  let rawStockData = { items: [], lastHistory: {}, latestOrders: {} };
   let currentGeneratedOrders = [];
   let currentFontPx = 16;
   let currentViewMode = "count";
@@ -573,6 +645,203 @@
     text: "Loading guidance..."
   };
 
+  // ==========================================
+  // DELIVERY RECONCILIATION MODAL LOGIC
+  // ==========================================
+  function openReceiveDeliveryModal() {
+    const currentSite = document.getElementById("siteSelect").value || "NGH";
+    document.getElementById("deliverySiteSelect").value = currentSite;
+    renderDeliveryCheckItems(currentSite);
+    document.getElementById("deliveryModal").style.display = "flex";
+  }
+
+  function hideDeliveryModal() {
+    document.getElementById("deliveryModal").style.display = "none";
+  }
+
+  function closeDeliveryModal(e) {
+    if (e.target.id === "deliveryModal") hideDeliveryModal();
+  }
+
+  function renderDeliveryCheckItems(site) {
+    const metaContainer = document.getElementById("deliveryOrderMeta");
+    const container = document.getElementById("deliveryItemsContainer");
+    const reportBox = document.getElementById("deliveryReconciliationReport");
+    const actionBtns = document.getElementById("deliveryActionButtons");
+    
+    container.innerHTML = "";
+    reportBox.style.display = "none";
+
+    if (!rawStockData.latestOrders || !rawStockData.latestOrders[site]) {
+      metaContainer.innerHTML = `No previous order records found for <strong>${site}</strong>.`;
+      actionBtns.style.display = "none";
+      return;
+    }
+
+    const order = rawStockData.latestOrders[site];
+    metaContainer.innerHTML = `📋 <strong>Order Date:</strong> ${order.date}<br>👤 <strong>Ordered By:</strong> ${order.staff}`;
+
+    if (!order.items || order.items.length === 0) {
+      container.innerHTML = `<p style="padding:10px; font-weight:700; color:var(--text-muted);">The latest stock check for ${site} required 0 items to be ordered (stock was healthy).</p>`;
+      actionBtns.style.display = "none";
+      return;
+    }
+
+    actionBtns.style.display = "block";
+
+    order.items.forEach((it, idx) => {
+      const row = document.createElement("div");
+      row.className = "delivery-item-row";
+      row.innerHTML = `
+        <div style="flex:1;">
+          <div style="font-weight:800; color:var(--nhs-blue);">${it.item}</div>
+          <div style="font-size:0.85rem; color:var(--text-muted);">${it.desc} (${it.pack})</div>
+          <div style="font-size:0.85rem; font-weight:700; color:var(--nhs-amber);">Ordered: ${it.orderDisplay}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:0.8rem; font-weight:800;">Delivered:</span>
+          <button type="button" class="counter-btn" style="width:40px; height:40px; font-size:1.3rem;" onclick="stepDeliveryCount(${idx}, -1)">−</button>
+          <input type="number" min="0" class="delivery-input" id="deliv_in_${idx}" 
+            data-item="${it.item}" 
+            data-desc="${it.desc}" 
+            data-pack="${it.pack}" 
+            data-expected="${it.expectedPacks}" 
+            value="${it.expectedPacks}" 
+            style="width:58px; height:40px; text-align:center; font-weight:800; font-size:1.1rem; padding:4px;">
+          <button type="button" class="counter-btn" style="width:40px; height:40px; font-size:1.3rem;" onclick="stepDeliveryCount(${idx}, 1)">+</button>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function stepDeliveryCount(idx, delta) {
+    const inp = document.getElementById(`deliv_in_${idx}`);
+    if (!inp) return;
+    let val = parseInt(inp.value) || 0;
+    val = Math.max(0, val + delta);
+    inp.value = val;
+  }
+
+  function reconcileDelivery() {
+    const inputs = document.querySelectorAll(".delivery-input");
+    const site = document.getElementById("deliverySiteSelect").value;
+    const reportBox = document.getElementById("deliveryReconciliationReport");
+    const shortfalls = [];
+    let totalExpected = 0;
+    let totalDelivered = 0;
+
+    inputs.forEach(inp => {
+      const expected = parseInt(inp.dataset.expected) || 0;
+      const delivered = parseInt(inp.value) || 0;
+      totalExpected += expected;
+      totalDelivered += delivered;
+
+      if (delivered < expected) {
+        const diff = expected - delivered;
+        shortfalls.push({
+          item: inp.dataset.item,
+          desc: inp.dataset.desc,
+          pack: inp.dataset.pack,
+          expected: expected,
+          delivered: delivered,
+          shortfall: diff
+        });
+      }
+    });
+
+    reportBox.style.display = "block";
+
+    if (shortfalls.length === 0) {
+      reportBox.style.background = "#dcfce7";
+      reportBox.style.border = "2px solid #22c55e";
+      reportBox.style.color = "#14532d";
+      reportBox.innerHTML = `
+        <h3 style="margin-bottom:4px;">🎉 Full Delivery Verified!</h3>
+        <p style="font-weight:700; font-size:0.95rem;">All ${inputs.length} ordered items for <strong>${site}</strong> have been delivered in full.</p>
+      `;
+    } else {
+      reportBox.style.background = "#fee2e2";
+      reportBox.style.border = "2px solid #ef4444";
+      reportBox.style.color = "#7f1d1d";
+      
+      let html = `<h3 style="margin-bottom:6px;">⚠️ Order Shortfall Detected (${site})</h3>`;
+      html += `<p style="font-size:0.85rem; margin-bottom:8px; font-weight:700;">The following items were not fully delivered:</p><ul style="padding-left:20px; font-size:0.9rem;">`;
+      
+      let summaryClipboardText = `MRI Delivery Shortfall Report - ${site}\n`;
+      shortfalls.forEach(s => {
+        html += `<li><strong>${s.item} (${s.desc})</strong>: Ordered ${s.expected} x ${s.pack}, Received ${s.delivered} (<strong>Shortfall: ${s.shortfall}</strong>)</li>`;
+        summaryClipboardText += `• ${s.item} (${s.desc}): Ordered ${s.expected}, Received ${s.delivered} (Shortfall: ${s.shortfall} x ${s.pack})\n`;
+      });
+      html += `</ul>`;
+      html += `<button type="button" class="btn btn-secondary" style="margin-top:10px; font-size:0.85rem; padding:8px;" onclick="copyShortfallReport('${encodeURIComponent(summaryClipboardText)}')">📋 Copy Shortfall Report</button>`;
+      
+      reportBox.innerHTML = html;
+    }
+  }
+
+  function copyShortfallReport(encodedText) {
+    const text = decodeURIComponent(encodedText);
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Shortfall report copied to clipboard!");
+    }).catch(() => {
+      alert("Could not copy automatically. Please note down the shortfalls.");
+    });
+  }
+
+  // ==========================================
+  // RECENT ORDER DUPLICATE CHECK (3-4 DAYS)
+  // ==========================================
+  function parseOrderDateToTimestamp(dateStr, isoDate) {
+    if (isoDate) {
+      const parsed = Date.parse(isoDate);
+      if (!isNaN(parsed)) return parsed;
+    }
+    if (!dateStr) return 0;
+    // Format: "19-Oct-2026 14:30"
+    const m = dateStr.match(/(\d{1,2})-([A-Za-z]{3})-(\d{4})(?:\s+(\d{1,2}):(\d{1,2}))?/);
+    if (!m) return 0;
+    const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+    const month = months[m[2].toLowerCase()] || 0;
+    const d = new Date(Number(m[3]), month, Number(m[1]), Number(m[4] || 0), Number(m[5] || 0));
+    return d.getTime();
+  }
+
+  function checkRecentOrderWarning(site) {
+    const banner = document.getElementById("recentOrderBanner");
+    if (!banner) return;
+    banner.style.display = "none";
+
+    if (!site || !rawStockData.latestOrders || !rawStockData.latestOrders[site]) return;
+    const order = rawStockData.latestOrders[site];
+    const orderTime = parseOrderDateToTimestamp(order.date, order.isoDate);
+    if (!orderTime) return;
+
+    const now = new Date().getTime();
+    const diffDays = (now - orderTime) / (1000 * 60 * 60 * 24);
+
+    // If order was placed within the last 4 days
+    if (diffDays >= 0 && diffDays <= 4.0) {
+      let daysText = "";
+      if (diffDays < 0.8) {
+        daysText = "earlier today";
+      } else if (diffDays < 1.8) {
+        daysText = "yesterday (1 day ago)";
+      } else {
+        daysText = `${Math.floor(diffDays)} days ago`;
+      }
+
+      banner.innerHTML = `
+        ⚠️ <strong>Recent Order Warning:</strong> An order for <strong>${site}</strong> was placed <strong>${daysText}</strong> on <strong>${order.date}</strong> by <strong>${order.staff}</strong>.<br>
+        <span style="font-size:0.85rem;">If this order is arriving today, tap <strong>"📦 Check Received Delivery"</strong> above rather than placing a duplicate order.</span>
+      `;
+      banner.style.display = "block";
+    }
+  }
+
+  // ==========================================
+  // GUIDANCE MODAL CONTROLS
+  // ==========================================
   function openGuidanceModal() {
     document.getElementById("guidanceHeadingText").innerText = guidanceContent.heading;
     document.getElementById("guidanceBodyText").innerText = guidanceContent.text;
@@ -584,9 +853,7 @@
   }
 
   function closeGuidanceModal(e) {
-    if (e.target.id === "guidanceModal") {
-      hideGuidanceModal();
-    }
+    if (e.target.id === "guidanceModal") hideGuidanceModal();
   }
 
   function stepFontSize(delta) {
@@ -669,9 +936,6 @@
     }
   }
 
-  // ==========================================
-  // VIEW SWITCHING
-  // ==========================================
   function toggleSettingsView() {
     if (currentViewMode === "settings") {
       switchTab("count");
@@ -707,22 +971,18 @@
     }
   }
 
-  // Site-specific recipient routing logic
   function getEffectiveRecipients(site) {
     if (site === "RHH") {
-      // RHH: Sent strictly to Superintendents (no CC)
       return {
         to: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net",
         cc: ""
       };
     } else if (site === "WPH") {
-      // WPH: To is left blank, CC is Superintendents
       return {
         to: "",
         cc: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net"
       };
     } else {
-      // NGH: Standard To & CC
       return {
         to: emailSettings.toEmail,
         cc: emailSettings.ccEmail
@@ -732,6 +992,7 @@
 
   function handleSiteSelectChange(val) {
     document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    checkRecentOrderWarning(val);
     renderItems();
   }
 
@@ -757,6 +1018,9 @@
           document.getElementById("cfgGuidanceHeading").value = guidanceContent.heading;
           document.getElementById("cfgGuidanceText").value = guidanceContent.text;
         }
+
+        const site = document.getElementById("siteSelect").value;
+        checkRecentOrderWarning(site);
 
         renderItems();
         renderAdjustItems();
@@ -990,6 +1254,20 @@
       return; 
     }
 
+    // Duplicate Order Check (Warn if within last 4 days)
+    if (rawStockData.latestOrders && rawStockData.latestOrders[site]) {
+      const prevOrder = rawStockData.latestOrders[site];
+      const prevTime = parseOrderDateToTimestamp(prevOrder.date, prevOrder.isoDate);
+      if (prevTime) {
+        const diffDays = (new Date().getTime() - prevTime) / (1000 * 60 * 60 * 24);
+        if (diffDays >= 0 && diffDays <= 4.0) {
+          const daysAgo = diffDays < 0.8 ? "earlier today" : `${Math.floor(diffDays)} days ago`;
+          const proceed = confirm(`⚠️ Warning: An order for ${site} was already placed ${daysAgo} on ${prevOrder.date} by ${prevOrder.staff}.\n\nAre you sure you want to submit another order?`);
+          if (!proceed) return;
+        }
+      }
+    }
+
     const staffName = document.getElementById("staffName").value.trim();
     const inputs = document.querySelectorAll(".stock-input");
     const payloadItems = [];
@@ -1058,7 +1336,6 @@
 
     const site = data.site || document.getElementById("siteSelect").value;
     
-    // Display RHH laminated sheet banner if RHH
     const rhhBanner = document.getElementById("rhhLaminatedNotice");
     if (rhhBanner) {
       rhhBanner.style.display = (site === "RHH") ? "block" : "none";
@@ -1128,7 +1405,6 @@
     });
     bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
 
-    // Get site-specific recipients
     const rec = getEffectiveRecipients(site);
     const ccQuery = rec.cc ? `&cc=${encodeURIComponent(rec.cc)}` : "";
     const mailtoUrl = `mailto:${encodeURIComponent(rec.to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}${ccQuery}`;
