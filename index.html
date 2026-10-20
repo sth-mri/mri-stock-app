@@ -23,7 +23,6 @@
       --badge-bg: #e2e8f0;
     }
 
-    /* Muted, Glare-Free Dark Mode for Dim Console Suites */
     html.dark-mode, body.dark-mode {
       --bg-color: #0b1120;
       --card-bg: #1e293b;
@@ -32,11 +31,11 @@
       --border-color: #334155;
       --input-bg: #0f172a;
       --badge-bg: #273549;
-      --nhs-blue: #2563eb;       /* Softer royal blue (replaces blinding cyan) */
-      --nhs-dark-blue: #1e3a8a;  /* Deep navy */
-      --nhs-green: #15803d;      /* Calm, rich forest green (replaces neon green) */
-      --nhs-red: #b91c1c;        /* Calmer, muted deep red */
-      --nhs-amber: #92400e;      /* Rich dark amber */
+      --nhs-blue: #2563eb;
+      --nhs-dark-blue: #1e3a8a;
+      --nhs-green: #15803d;
+      --nhs-red: #b91c1c;
+      --nhs-amber: #92400e;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -101,7 +100,7 @@
       margin-bottom: 12px;
     }
     html.dark-mode header, body.dark-mode header {
-      background: #172554;       /* Deep, calm midnight navy */
+      background: #172554;
       border-color: #1e3a8a;
       border-left: 6px solid #2563eb;
       color: #e2e8f0;
@@ -178,7 +177,7 @@
 
     .item-title { font-weight: 900; color: var(--nhs-blue); font-size: 1.15rem; }
     html.dark-mode .item-title, body.dark-mode .item-title {
-      color: #60a5fa; /* Soft cornflower blue */
+      color: #60a5fa;
     }
     .item-meta { font-size: 0.95rem; color: var(--text-muted); font-weight: 700; }
 
@@ -276,20 +275,17 @@
       color: #f1f5f9;
     }
 
-    /* Light Orange Button (Toned down in dark mode) */
     .btn-light-orange {
       background: #ff9e42 !important;
       color: #111827 !important;
       border: 1px solid #f59e0b;
     }
     html.dark-mode .btn-light-orange, body.dark-mode .btn-light-orange {
-      background: #9a3412 !important; /* Muted warm rust/amber (no glare) */
+      background: #9a3412 !important;
       color: #ffffff !important;
       border-color: #c2410c;
     }
-    .btn-light-orange:active {
-      opacity: 0.85;
-    }
+    .btn-light-orange:active { opacity: 0.85; }
 
     .loader {
       display: none;
@@ -315,7 +311,7 @@
     .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
     .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
     html.dark-mode .highlight-qty, body.dark-mode .highlight-qty {
-      color: #f87171; /* Soft coral red */
+      color: #f87171;
     }
 
     /* Modal Styles */
@@ -434,7 +430,7 @@
   </div>
 
   <!-- =========================================
-       VIEW 2: COMBINED SETTINGS & TARGET ADJUSTMENTS VIEW
+       VIEW 2: COMBINED SETTINGS VIEW
        ========================================= -->
   <div id="settingsView">
     <div style="margin-bottom: 12px;">
@@ -478,7 +474,9 @@
       <div style="margin-bottom: 10px;">
         <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
         <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Note: For RHH and WPH, the To field will automatically remain blank.</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">
+          Note: For NGH, orders are sent to these addresses. For RHH, orders are sent to sth.mrisuperintendents@nhs.net only. For WPH, the To field remains blank.
+        </span>
       </div>
 
       <div style="margin-bottom: 10px;">
@@ -527,6 +525,11 @@
     <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
       Your stock levels have been saved to the ledger. Dispatch the order below:
     </p>
+
+    <!-- Specific Laminated Sheet Reminder for RHH -->
+    <div id="rhhLaminatedNotice" class="card" style="display:none; background:#fef3c7; border:2px solid var(--nhs-amber); color:#92400e; padding:12px; font-weight:800; font-size:0.95rem; margin-bottom:14px;">
+      📝 <strong>RHH Reminder:</strong> Please manually transfer these order quantities onto the laminated printed sheet for the Pharmacy team round.
+    </div>
 
     <div id="tableContainer"></div>
 
@@ -666,6 +669,9 @@
     }
   }
 
+  // ==========================================
+  // VIEW SWITCHING
+  // ==========================================
   function toggleSettingsView() {
     if (currentViewMode === "settings") {
       switchTab("count");
@@ -701,11 +707,27 @@
     }
   }
 
-  function getEffectiveToEmail(site) {
-    if (site === "RHH" || site === "WPH") {
-      return "";
+  // Site-specific recipient routing logic
+  function getEffectiveRecipients(site) {
+    if (site === "RHH") {
+      // RHH: Sent strictly to Superintendents (no CC)
+      return {
+        to: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net",
+        cc: ""
+      };
+    } else if (site === "WPH") {
+      // WPH: To is left blank, CC is Superintendents
+      return {
+        to: "",
+        cc: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net"
+      };
+    } else {
+      // NGH: Standard To & CC
+      return {
+        to: emailSettings.toEmail,
+        cc: emailSettings.ccEmail
+      };
     }
-    return emailSettings.toEmail;
   }
 
   function handleSiteSelectChange(val) {
@@ -1034,6 +1056,14 @@
     document.getElementById("settingsView").style.display = "none";
     document.getElementById("resultView").style.display = "block";
 
+    const site = data.site || document.getElementById("siteSelect").value;
+    
+    // Display RHH laminated sheet banner if RHH
+    const rhhBanner = document.getElementById("rhhLaminatedNotice");
+    if (rhhBanner) {
+      rhhBanner.style.display = (site === "RHH") ? "block" : "none";
+    }
+
     let html = "";
     if (data.orders.length === 0) {
       html = "<p style='font-size:1.15rem; font-weight:700;'>All stock levels are above minimum targets. No items require ordering.</p>";
@@ -1098,8 +1128,10 @@
     });
     bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
 
-    const effectiveTo = getEffectiveToEmail(site);
-    const mailtoUrl = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    // Get site-specific recipients
+    const rec = getEffectiveRecipients(site);
+    const ccQuery = rec.cc ? `&cc=${encodeURIComponent(rec.cc)}` : "";
+    const mailtoUrl = `mailto:${encodeURIComponent(rec.to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}${ccQuery}`;
 
     const tempLink = document.createElement('a');
     tempLink.href = mailtoUrl;
