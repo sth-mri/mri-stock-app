@@ -110,13 +110,13 @@
       align-items: stretch;
     }
     .btn-submit-order {
-      flex: 2; /* 2/3 width */
+      flex: 2;
       margin-top: 0 !important;
       padding: 14px 8px !important;
       font-size: 1rem !important;
     }
     .btn-adjust-targets {
-      flex: 1; /* 1/3 width */
+      flex: 1;
       margin-top: 0 !important;
       padding: 14px 6px !important;
       font-size: 0.85rem !important;
@@ -149,6 +149,7 @@
       -webkit-appearance: none;
     }
 
+    /* Required Input Visual State */
     .input-required {
       border: 2px solid var(--nhs-red) !important;
       background-color: #fff5f5 !important;
@@ -433,7 +434,7 @@
 
     <div class="card">
       <label for="orderNotes">Optional Order Notes:</label>
-      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Required urgently please"></textarea>
     </div>
   </div>
 
@@ -532,18 +533,13 @@
   <div id="resultView" class="card">
     <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
     <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
-      Your stock levels have been saved to the ledger. Dispatch the order below:
+      Your current stock levels and order quantities have been saved to Columns D & E in the ledger. Dispatch the order below:
     </p>
 
     <div id="tableContainer"></div>
 
-    <!-- 1. Open in Phone Email App (Top position, Primary Blue) -->
     <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
-
-    <!-- 2. Copy Table for Outlook (Second position, Secondary Grey) -->
     <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
-
-    <!-- 3. Perform Another Stock Count (Third position, Light Orange) -->
     <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
@@ -664,9 +660,11 @@
 
     const input = btn.parentElement.querySelector('.stock-input');
     if (!input) return;
-    let val = parseFloat(input.value) || 0;
+    let val = parseFloat(input.value);
+    if (isNaN(val)) val = 0;
     val = Math.max(0, val + change);
     input.value = val;
+    input.classList.remove("input-required");
   }
 
   function onStockInputFocus(input) {
@@ -676,9 +674,6 @@
     }
   }
 
-  // ==========================================
-  // VIEW SWITCHING
-  // ==========================================
   function toggleSettingsView() {
     if (currentViewMode === "settings") {
       switchTab("count");
@@ -794,10 +789,10 @@
       const minTarget = item.minTarget[site] || 0;
       const key = `${site}_${itemName}_${itemDesc}`;
 
-      let historyText = "No previous record";
+      let historyText = "No previous count";
       if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
         const h = rawStockData.lastHistory[key];
-        historyText = `Last: ${h.value} (${h.date})`;
+        historyText = `Last Stock: ${h.value} (${h.date})`;
       }
 
       const itemCard = document.createElement("div");
@@ -821,8 +816,9 @@
             data-pack="${packSize}" 
             data-min-target="${minTarget}"
             data-weekly-use="${weeklyUse}" 
-            placeholder="Qty"
-            onfocus="onStockInputFocus(this)">
+            placeholder="Qty (0 if none)"
+            onfocus="onStockInputFocus(this)"
+            oninput="this.classList.remove('input-required')">
           <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
         </div>
       `;
@@ -971,31 +967,46 @@
     }
   }
 
+  /**
+   * Enforces that ALL items must have a quantity entered (even if 0)
+   */
   async function submitStockForm() {
     if (!requireStaffName()) return;
 
     const site = document.getElementById("siteSelect").value;
-    if (!site) { alert("Please select a hospital site."); return; }
+    if (!site) { 
+      alert("Please select a hospital site."); 
+      document.getElementById("siteSelect").focus();
+      return; 
+    }
 
     const staffName = document.getElementById("staffName").value.trim();
     const inputs = document.querySelectorAll(".stock-input");
     const payloadItems = [];
+    let missingInput = null;
 
     inputs.forEach(inp => {
-      if (inp.value !== "") {
+      const val = inp.value.trim();
+      if (val === "" || isNaN(val)) {
+        inp.classList.add("input-required");
+        if (!missingInput) missingInput = inp;
+      } else {
+        inp.classList.remove("input-required");
         payloadItems.push({
           item: inp.dataset.item,
           desc: inp.dataset.desc,
           pack: inp.dataset.pack,
           minTarget: inp.dataset.minTarget,
           weeklyUse: inp.dataset.weeklyUse,
-          current: inp.value
+          current: Number(val)
         });
       }
     });
 
-    if (payloadItems.length === 0) {
-      alert("Please enter a stock level count for at least one item.");
+    if (missingInput) {
+      alert("Please enter a stock level for ALL items. If there is no stock, enter 0.");
+      missingInput.focus();
+      missingInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -1007,7 +1018,7 @@
       items: payloadItems
     };
 
-    showLoading(true, "Updating ledger & calculating order...");
+    showLoading(true, "Updating 2-column ledger & calculating order...");
 
     try {
       const res = await fetch(API_URL, {
@@ -1038,7 +1049,7 @@
 
     let html = "";
     if (data.orders.length === 0) {
-      html = "<p style='font-size:1.15rem; font-weight:700;'>Stock levels are healthy. No items require ordering.</p>";
+      html = "<p style='font-size:1.15rem; font-weight:700;'>All stock levels are above minimum targets. No items require ordering.</p>";
     } else {
       html += `
         <table id="orderTablePreview" class="outlook-table">
