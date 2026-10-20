@@ -415,7 +415,7 @@
     </div>
 
     <div class="a11y-group">
-      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
+      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
     </div>
   </div>
 
@@ -570,7 +570,7 @@
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open in Email App</button>
     <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
     <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
@@ -867,7 +867,7 @@
     document.body.classList.toggle('dark-mode', isDark);
 
     const btn = document.getElementById('themeBtn');
-    if (btn) btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    if (btn) btn.innerText = isDark ? "☀️" : "🌙";
     try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
   }
 
@@ -883,7 +883,7 @@
         document.documentElement.classList.add('dark-mode');
         document.body.classList.add('dark-mode');
         const btn = document.getElementById('themeBtn');
-        if (btn) btn.innerText = "☀️ Light Mode";
+        if (btn) btn.innerText = "☀️";
       }
     } catch(e) {}
 
