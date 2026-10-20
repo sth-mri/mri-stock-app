@@ -304,4 +304,823 @@
     .outlook-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 15
+      margin: 15px 0;
+      font-size: 1rem;
+    }
+    .outlook-table th, .outlook-table td {
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: left;
+    }
+    .outlook-table th { background: var(--badge-bg); color: var(--text-main); font-weight: 900; }
+    .highlight-qty { color: var(--nhs-red); font-weight: 900; font-size: 1.15rem; }
+    html.dark-mode .highlight-qty, body.dark-mode .highlight-qty {
+      color: #f87171; /* Soft coral red */
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 550px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.6rem;
+      font-weight: 900;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 0 8px;
+    }
+    .modal-body {
+      font-size: 1rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Toolbar -->
+  <div class="a11y-bar">
+    <div class="a11y-group">
+      <span class="a11y-label">Font:</span>
+      <button type="button" class="a11y-btn" onclick="stepFontSize(-2)">−Aa</button>
+      <button type="button" class="a11y-btn" onclick="stepFontSize(2)">+Aa</button>
+    </div>
+
+    <div class="a11y-group">
+      <button type="button" class="a11y-btn" id="topSettingsBtn" onclick="toggleSettingsView()">⚙️ Settings</button>
+    </div>
+
+    <div class="a11y-group">
+      <button type="button" class="a11y-btn" id="guidanceBtn" onclick="openGuidanceModal()">ℹ️ Guidance</button>
+    </div>
+
+    <div class="a11y-group">
+      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+  </div>
+
+  <header>
+    <h1>STH MRI Consumables & IV Stock</h1>
+    <p>Northern General • Royal Hallamshire • Weston Park</p>
+  </header>
+
+  <!-- =========================================
+       VIEW 1: STOCK COUNT & ORDER VIEW
+       ========================================= -->
+  <div id="countView">
+    <button type="button" class="btn btn-green" style="margin-bottom: 12px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
+
+    <div class="card">
+      <label for="staffName">1. Ordering Person's Name: <span style="color:var(--nhs-red);">* (Required)</span></label>
+      <input type="text" id="staffName" placeholder="Your name here..." oninput="handleStaffNameInput()">
+    </div>
+
+    <div class="card">
+      <label for="siteSelect">2. Select Hospital Site:</label>
+      <select id="siteSelect" onchange="handleSiteSelectChange(this.value)">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+    </div>
+
+    <div id="lockNotice" class="lock-notice">
+      🔒 Please enter your Name & Title above to unlock stock level entry.
+    </div>
+
+    <div class="search-box" id="searchBoxContainer" style="display:none;">
+      <input type="search" id="itemSearch" placeholder="🔍 Filter items (e.g. Dotarem, Saline, Buscopan)..." oninput="filterItems()">
+    </div>
+
+    <div id="itemsContainer"></div>
+
+    <div class="card">
+      <label for="orderNotes">Optional Order Notes:</label>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. Urgent next-day delivery requested for neuro list"></textarea>
+    </div>
+  </div>
+
+  <!-- =========================================
+       VIEW 2: COMBINED SETTINGS & TARGET ADJUSTMENTS VIEW
+       ========================================= -->
+  <div id="settingsView">
+    <div style="margin-bottom: 12px;">
+      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
+    </div>
+
+    <!-- 1. Stock Target Baselines Section -->
+    <div class="card" style="border-left: 6px solid var(--nhs-amber);">
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">🎯 Stock Target Baselines (Usage & Min)</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
+      </p>
+
+      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+      <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
+        <option value="">-- Choose Site --</option>
+        <option value="NGH">Northern General Hospital (NGH)</option>
+        <option value="RHH">Royal Hallamshire Hospital (RHH)</option>
+        <option value="WPH">Weston Park Hospital (WPH)</option>
+      </select>
+
+      <div style="margin-top: 12px;">
+        <label for="adjustStaffName">Superintendent / Editor Name:</label>
+        <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
+      </div>
+    </div>
+
+    <div id="adjustItemsContainer"></div>
+
+    <div class="card" id="adjustSubmitCard" style="display:none;">
+      <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
+    </div>
+
+    <!-- 2. Email & Guidance Configuration Section -->
+    <div class="card" style="border-left: 6px solid var(--nhs-blue);">
+      <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email & Guidance Configuration</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
+      </p>
+
+      <div style="margin-bottom: 10px;">
+        <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
+        <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Note: For RHH and WPH, the To field will automatically remain blank.</span>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label for="cfgCcEmail">Copy Email (CC):</label>
+        <input type="text" id="cfgCcEmail" placeholder="sth.mrisuperintendents@nhs.net">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label for="cfgEmailSubject">Email Title / Subject Line:</label>
+        <input type="text" id="cfgEmailSubject" placeholder="IV Fluids Stock order {todays date}">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Use <code>{todays date}</code> to insert the current date automatically.</span>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label for="cfgEmailBody">Email Intro Message:</label>
+        <textarea id="cfgEmailBody" rows="2" placeholder="Here is this weeks order for IV Fluids for MRI:"></textarea>
+      </div>
+
+      <hr style="border:0; border-top:1px dashed var(--border-color); margin: 15px 0;">
+
+      <div style="margin-bottom: 10px;">
+        <label for="cfgGuidanceHeading">Guidance Heading (Sheet Cell A6):</label>
+        <input type="text" id="cfgGuidanceHeading" placeholder="Stock Ordering Guidance">
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label for="cfgGuidanceText">Guidance Instruction Text (Sheet Cell B6):</label>
+        <textarea id="cfgGuidanceText" rows="4" placeholder="Instructions here..."></textarea>
+      </div>
+
+      <button type="button" class="btn btn-secondary" style="padding:12px; font-size:1rem;" onclick="saveEmailConfigToSheet()">💾 Save Settings & Guidance to Google Sheet</button>
+    </div>
+
+    <div style="margin-top: 12px;">
+      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loader">Connecting to Google Sheet...</div>
+
+  <!-- =========================================
+       VIEW 3: RESULTS VIEW
+       ========================================= -->
+  <div id="resultView" class="card">
+    <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
+    <p style="font-size: 0.95rem; margin-bottom: 14px; font-weight: 700; color: var(--text-muted);">
+      Your stock levels have been saved to the ledger. Dispatch the order below:
+    </p>
+
+    <div id="tableContainer"></div>
+
+    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
+    <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
+    <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
+  </div>
+</div>
+
+<!-- Guidance Modal -->
+<div id="guidanceModal" class="modal-backdrop" onclick="closeGuidanceModal(event)">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 id="guidanceHeadingText" style="color:var(--nhs-blue); font-size:1.25rem; font-weight:900;">Stock Ordering Guidance</h2>
+      <button type="button" class="modal-close-btn" onclick="hideGuidanceModal()">✕</button>
+    </div>
+    <div id="guidanceBodyText" class="modal-body">
+      Loading guidance instructions from Google Sheet...
+    </div>
+    <button type="button" class="btn btn-secondary" style="margin-top:16px;" onclick="hideGuidanceModal()">Close</button>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
+
+  let rawStockData = { items: [], lastHistory: {} };
+  let currentGeneratedOrders = [];
+  let currentFontPx = 16;
+  let currentViewMode = "count";
+
+  let emailSettings = {
+    toEmail: "tim.jones17@nhs.net, lauren.mills6@nhs.net",
+    ccEmail: "sth.mrisuperintendents@nhs.net",
+    emailSubject: "IV Fluids Stock order {todays date}",
+    emailBody: "Here is this weeks order for IV Fluids for MRI:"
+  };
+
+  let guidanceContent = {
+    heading: "Stock Ordering Guidance",
+    text: "Loading guidance..."
+  };
+
+  function openGuidanceModal() {
+    document.getElementById("guidanceHeadingText").innerText = guidanceContent.heading;
+    document.getElementById("guidanceBodyText").innerText = guidanceContent.text;
+    document.getElementById("guidanceModal").style.display = "flex";
+  }
+
+  function hideGuidanceModal() {
+    document.getElementById("guidanceModal").style.display = "none";
+  }
+
+  function closeGuidanceModal(e) {
+    if (e.target.id === "guidanceModal") {
+      hideGuidanceModal();
+    }
+  }
+
+  function stepFontSize(delta) {
+    currentFontPx = Math.min(26, Math.max(14, currentFontPx + delta));
+    document.documentElement.style.fontSize = currentFontPx + "px";
+    try { localStorage.setItem("NHS_FONT_PX", currentFontPx.toString()); } catch(e){}
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark-mode');
+    document.body.classList.toggle('dark-mode', isDark);
+
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+    try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const savedPx = localStorage.getItem("NHS_FONT_PX");
+      if (savedPx) {
+        currentFontPx = parseInt(savedPx);
+        document.documentElement.style.fontSize = currentFontPx + "px";
+      }
+
+      if (localStorage.getItem("NHS_DARK_THEME") === "1") {
+        document.documentElement.classList.add('dark-mode');
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('themeBtn');
+        if (btn) btn.innerText = "☀️ Light Mode";
+      }
+    } catch(e) {}
+
+    fetchCatalog();
+  });
+
+  function hasValidStaffName() {
+    return document.getElementById("staffName").value.trim().length > 0;
+  }
+
+  function handleStaffNameInput() {
+    const staffInput = document.getElementById("staffName");
+    const notice = document.getElementById("lockNotice");
+
+    if (hasValidStaffName()) {
+      staffInput.classList.remove("input-required");
+      notice.style.display = "none";
+    }
+  }
+
+  function requireStaffName() {
+    if (!hasValidStaffName()) {
+      const staffInput = document.getElementById("staffName");
+      staffInput.classList.add("input-required");
+      staffInput.focus();
+      staffInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById("lockNotice").style.display = "block";
+      alert("Please enter the Ordering Person's Name before recording stock levels.");
+      return false;
+    }
+    return true;
+  }
+
+  function stepCount(btn, change) {
+    if (!requireStaffName()) return;
+
+    const input = btn.parentElement.querySelector('.stock-input');
+    if (!input) return;
+    let val = parseFloat(input.value);
+    if (isNaN(val)) val = 0;
+    val = Math.max(0, val + change);
+    input.value = val;
+    input.classList.remove("input-required");
+  }
+
+  function onStockInputFocus(input) {
+    if (!hasValidStaffName()) {
+      input.blur();
+      requireStaffName();
+    }
+  }
+
+  function toggleSettingsView() {
+    if (currentViewMode === "settings") {
+      switchTab("count");
+    } else {
+      switchTab("settings");
+    }
+  }
+
+  function switchTab(mode) {
+    currentViewMode = mode;
+    document.getElementById("resultView").style.display = "none";
+    const settingsBtn = document.getElementById("topSettingsBtn");
+
+    document.getElementById("countView").style.display = (mode === "count") ? "block" : "none";
+    document.getElementById("settingsView").style.display = (mode === "settings") ? "block" : "none";
+
+    if (settingsBtn) {
+      if (mode === "settings") {
+        settingsBtn.classList.add("active-settings");
+      } else {
+        settingsBtn.classList.remove("active-settings");
+      }
+    }
+
+    if (mode === "count") {
+      renderItems();
+    } else if (mode === "settings") {
+      const currentSite = document.getElementById("siteSelect").value;
+      if (currentSite) {
+        document.getElementById("adjustSiteSelect").value = currentSite;
+      }
+      renderAdjustItems();
+    }
+  }
+
+  function getEffectiveToEmail(site) {
+    if (site === "RHH" || site === "WPH") {
+      return "";
+    }
+    return emailSettings.toEmail;
+  }
+
+  function handleSiteSelectChange(val) {
+    document.getElementById("searchBoxContainer").style.display = val ? "block" : "none";
+    renderItems();
+  }
+
+  function handleAdjustSiteChange(val) {
+    renderAdjustItems();
+  }
+
+  async function fetchCatalog() {
+    showLoading(true, "Connecting to Google Sheet & fetching catalog...");
+    try {
+      const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
+      const data = await res.json();
+      if (data.status === "success") {
+        rawStockData = data;
+
+        if (data.emailSettings) {
+          emailSettings = data.emailSettings;
+          updateSettingsFields();
+        }
+
+        if (data.guidance) {
+          guidanceContent = data.guidance;
+          document.getElementById("cfgGuidanceHeading").value = guidanceContent.heading;
+          document.getElementById("cfgGuidanceText").value = guidanceContent.text;
+        }
+
+        renderItems();
+        renderAdjustItems();
+      } else {
+        alert("Server error: " + data.message);
+      }
+    } catch (e) {
+      alert("Error loading Google Sheet data: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function updateSettingsFields() {
+    document.getElementById("cfgCcEmail").value = emailSettings.ccEmail;
+    document.getElementById("cfgToEmail").value = emailSettings.toEmail;
+    document.getElementById("cfgEmailSubject").value = emailSettings.emailSubject;
+    document.getElementById("cfgEmailBody").value = emailSettings.emailBody;
+  }
+
+  function filterItems() {
+    const query = document.getElementById("itemSearch").value.toLowerCase().trim();
+    const cards = document.querySelectorAll("#itemsContainer .item-card");
+
+    cards.forEach(card => {
+      const text = card.getAttribute("data-search").toLowerCase();
+      card.style.display = text.includes(query) ? "flex" : "none";
+    });
+  }
+
+  function renderItems() {
+    const site = document.getElementById("siteSelect").value;
+    const container = document.getElementById("itemsContainer");
+    container.innerHTML = "";
+
+    if (!site || !rawStockData.items) return;
+
+    rawStockData.items.forEach((item) => {
+      const itemName = item.item;
+      const itemDesc = item.desc;
+      const packSize = item.pack;
+      const weeklyUse = item.weeklyUse[site] || 0;
+      const minTarget = item.minTarget[site] || 0;
+      const key = `${site}_${itemName}_${itemDesc}`;
+
+      let historyText = "No previous count";
+      if (rawStockData.lastHistory && rawStockData.lastHistory[key]) {
+        const h = rawStockData.lastHistory[key];
+        historyText = `Last Stock: ${h.value} (${h.date})`;
+      }
+
+      const itemCard = document.createElement("div");
+      itemCard.className = "item-card";
+      itemCard.setAttribute("data-search", `${itemName} ${itemDesc}`);
+      itemCard.innerHTML = `
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        </div>
+        <div class="badge-row">
+          <span class="badge badge-green">Min Target: ${minTarget}</span>
+          <span class="badge badge-blue">Weekly Use: ${weeklyUse}</span>
+          <span class="badge badge-history">${historyText}</span>
+        </div>
+        <div class="counter-control">
+          <button type="button" class="counter-btn" onclick="stepCount(this, -1)">−</button>
+          <input type="number" min="0" class="count-input stock-input" 
+            data-item="${itemName}" 
+            data-desc="${itemDesc}" 
+            data-pack="${packSize}" 
+            data-min-target="${minTarget}" 
+            data-weekly-use="${weeklyUse}" 
+            placeholder="Qty (0 if none)"
+            onfocus="onStockInputFocus(this)"
+            oninput="this.classList.remove('input-required')">
+          <button type="button" class="counter-btn" onclick="stepCount(this, 1)">+</button>
+        </div>
+      `;
+      container.appendChild(itemCard);
+    });
+
+    filterItems();
+  }
+
+  function renderAdjustItems() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    const container = document.getElementById("adjustItemsContainer");
+    const submitCard = document.getElementById("adjustSubmitCard");
+    container.innerHTML = "";
+
+    if (!site || !rawStockData.items) {
+      submitCard.style.display = "none";
+      return;
+    }
+
+    submitCard.style.display = "block";
+
+    rawStockData.items.forEach((item) => {
+      const itemName = item.item;
+      const itemDesc = item.desc;
+      const packSize = item.pack;
+      const weeklyUse = item.weeklyUse[site] || 0;
+      const minTarget = item.minTarget[site] || 0;
+
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.innerHTML = `
+        <div>
+          <div class="item-title">${itemName}</div>
+          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        </div>
+        <div class="edit-grid">
+          <div>
+            <label>Avg Weekly Use:</label>
+            <input type="number" step="any" min="0" class="adjust-weekly-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${weeklyUse}">
+          </div>
+          <div>
+            <label>Min Target Stock:</label>
+            <input type="number" step="any" min="0" class="adjust-min-input" 
+              data-item="${itemName}" 
+              data-desc="${itemDesc}" 
+              value="${minTarget}">
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  async function saveEmailConfigToSheet() {
+    const to = document.getElementById("cfgToEmail").value.trim() || "tim.jones17@nhs.net, lauren.mills6@nhs.net";
+    const cc = document.getElementById("cfgCcEmail").value.trim() || "sth.mrisuperintendents@nhs.net";
+    const sub = document.getElementById("cfgEmailSubject").value.trim() || "IV Fluids Stock order {todays date}";
+    const body = document.getElementById("cfgEmailBody").value.trim() || "Here is this weeks order for IV Fluids for MRI:";
+    const heading = document.getElementById("cfgGuidanceHeading").value.trim() || "Stock Ordering Guidance";
+    const guidanceTxt = document.getElementById("cfgGuidanceText").value.trim() || "";
+
+    showLoading(true, "Saving email configuration & guidance permanently to Google Sheet...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "updateEmailSettings",
+          toEmail: to,
+          ccEmail: cc,
+          emailSubject: sub,
+          emailBody: body,
+          guidanceHeading: heading,
+          guidanceText: guidanceTxt
+        })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        emailSettings = { toEmail: to, ccEmail: cc, emailSubject: sub, emailBody: body };
+        guidanceContent = { heading: heading, text: guidanceTxt };
+        updateSettingsFields();
+        alert(data.message);
+      } else {
+        alert("Failed to save: " + data.message);
+      }
+    } catch(e) {
+      alert("Error saving settings: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function submitBaselineAdjustments() {
+    const site = document.getElementById("adjustSiteSelect").value;
+    if (!site) { alert("Please select a site."); return; }
+
+    const staffName = document.getElementById("adjustStaffName").value.trim();
+    if (!staffName) { alert("Please enter your name/title."); return; }
+
+    const weeklyInputs = document.querySelectorAll(".adjust-weekly-input");
+    const minInputs = document.querySelectorAll(".adjust-min-input");
+    const updates = [];
+
+    for (let i = 0; i < weeklyInputs.length; i++) {
+      updates.push({
+        item: weeklyInputs[i].dataset.item,
+        desc: weeklyInputs[i].dataset.desc,
+        weeklyUse: weeklyInputs[i].value,
+        minTarget: minInputs[i].value
+      });
+    }
+
+    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
+
+    showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "updateBaselines",
+          site: site,
+          staffName: staffName,
+          updates: updates
+        })
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        alert(data.message);
+        await fetchCatalog();
+      } else {
+        alert("Failed to update: " + data.message);
+      }
+    } catch (e) {
+      alert("Error saving baselines: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function submitStockForm() {
+    if (!requireStaffName()) return;
+
+    const site = document.getElementById("siteSelect").value;
+    if (!site) { 
+      alert("Please select a hospital site."); 
+      document.getElementById("siteSelect").focus();
+      return; 
+    }
+
+    const staffName = document.getElementById("staffName").value.trim();
+    const inputs = document.querySelectorAll(".stock-input");
+    const payloadItems = [];
+    let missingInput = null;
+
+    inputs.forEach(inp => {
+      const val = inp.value.trim();
+      if (val === "" || isNaN(val)) {
+        inp.classList.add("input-required");
+        if (!missingInput) missingInput = inp;
+      } else {
+        inp.classList.remove("input-required");
+        payloadItems.push({
+          item: inp.dataset.item,
+          desc: inp.dataset.desc,
+          pack: inp.dataset.pack,
+          minTarget: inp.dataset.minTarget,
+          weeklyUse: inp.dataset.weeklyUse,
+          current: Number(val)
+        });
+      }
+    });
+
+    if (missingInput) {
+      alert("Please enter a stock level for ALL items. If there is no stock, enter 0.");
+      missingInput.focus();
+      missingInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const payload = {
+      action: "submitStockOrder",
+      site: site,
+      staffName: staffName,
+      notes: document.getElementById("orderNotes").value.trim(),
+      items: payloadItems
+    };
+
+    showLoading(true, "Updating ledger & calculating order...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        currentGeneratedOrders = data.orders;
+        displayResults(data);
+      } else {
+        alert("Failed to process order: " + data.message);
+      }
+    } catch (e) {
+      alert("Error submitting stock count: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function displayResults(data) {
+    document.getElementById("countView").style.display = "none";
+    document.getElementById("settingsView").style.display = "none";
+    document.getElementById("resultView").style.display = "block";
+
+    let html = "";
+    if (data.orders.length === 0) {
+      html = "<p style='font-size:1.15rem; font-weight:700;'>All stock levels are above minimum targets. No items require ordering.</p>";
+    } else {
+      html += `
+        <table id="orderTablePreview" class="outlook-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Description</th>
+              <th>Pack</th>
+              <th>Order Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      data.orders.forEach(r => {
+        html += `
+          <tr>
+            <td><strong>${r[0]}</strong></td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td class="highlight-qty">${r[3]}</td>
+          </tr>
+        `;
+      });
+      html += "</tbody></table>";
+    }
+
+    document.getElementById("tableContainer").innerHTML = html;
+  }
+
+  function copyTableToClipboard() {
+    const table = document.getElementById("orderTablePreview");
+    if (!table) { alert("No order table to copy."); return; }
+
+    const range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    try {
+      document.execCommand("copy");
+      alert("Order table copied to clipboard! Paste directly into Outlook.");
+    } catch (err) {
+      alert("Please copy manually from the screen.");
+    }
+    window.getSelection().removeAllRanges();
+  }
+
+  function openMailtoClient() {
+    const site = document.getElementById("siteSelect").value;
+    const todayStr = new Date().toLocaleDateString('en-GB');
+
+    let subject = emailSettings.emailSubject.replace(/\{todays date\}/gi, todayStr)
+                                           .replace(/\{date\}/gi, todayStr)
+                                           .replace(/\{site\}/gi, site);
+
+    let bodyText = `${emailSettings.emailBody}\n\nSite: ${site}\nOrdered By: ${document.getElementById("staffName").value}\n\n`;
+    currentGeneratedOrders.forEach(o => {
+      bodyText += `- ${o[0]} (${o[1]}): ${o[3]}\n`;
+    });
+    bodyText += `\nNotes: ${document.getElementById("orderNotes").value}`;
+
+    const effectiveTo = getEffectiveToEmail(site);
+    const mailtoUrl = `mailto:${effectiveTo}?cc=${emailSettings.ccEmail}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+
+    const tempLink = document.createElement('a');
+    tempLink.href = mailtoUrl;
+    tempLink.target = '_top';
+    tempLink.rel = 'noopener noreferrer';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+  }
+
+  function showLoading(show, text = "") {
+    const l = document.getElementById("loading");
+    l.innerText = text;
+    l.style.display = show ? "block" : "none";
+  }
+
+  function resetApp() {
+    document.getElementById("resultView").style.display = "none";
+    switchTab('count');
+    fetchCatalog();
+  }
+</script>
+</body>
+</html>
