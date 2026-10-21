@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
   <title>NHS MRI Stock Control & Target Manager</title>
+  <!-- Chart.js for Interactive Stock vs Order Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     /* =========================================
        THEMES & VARIABLES
@@ -82,7 +84,7 @@
     }
     .a11y-btn:active { background: var(--border-color); }
     
-    .a11y-btn.active-settings {
+    .a11y-btn.active-tab {
       background: var(--nhs-blue);
       color: #ffffff;
       border-color: var(--nhs-blue);
@@ -119,7 +121,7 @@
 
     label { font-size: 0.95rem; font-weight: 800; display: block; margin-bottom: 6px; color: var(--text-main); }
 
-    select, input[type="text"], input[type="email"], input[type="number"], input[type="search"], textarea {
+    select, input[type="text"], input[type="email"], input[type="number"], input[type="date"], input[type="search"], textarea {
       width: 100%;
       padding: 12px;
       border-radius: 6px;
@@ -156,7 +158,6 @@
       border-color: #92400e;
     }
 
-    /* Warning for duplicate order placed in last 3-4 days */
     .recent-order-alert {
       background: #fffbeb;
       border: 2px solid #f59e0b;
@@ -268,7 +269,28 @@
     .edit-grid label { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
     .edit-grid input { height: 48px; font-weight: 800; text-align: center; font-size: 1.2rem; }
 
-    /* Button Styles */
+    /* Site visibility checkbox container in settings */
+    .site-vis-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--card-bg);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+    .site-vis-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 0;
+      cursor: pointer;
+    }
+
+    /* Buttons */
     .btn {
       display: block;
       width: 100%;
@@ -316,7 +338,7 @@
       font-size: 1.2rem;
     }
 
-    #resultView, #settingsView { display: none; }
+    #resultView, #settingsView, #chartView { display: none; }
     .outlook-table {
       width: 100%;
       border-collapse: collapse;
@@ -393,6 +415,35 @@
       align-items: center;
       gap: 10px;
     }
+
+    /* Chart filter controls */
+    .chart-controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .quick-range-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .quick-range-btn {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      background: var(--badge-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .quick-range-btn.active {
+      background: var(--nhs-blue);
+      color: white;
+      border-color: var(--nhs-blue);
+    }
   </style>
 </head>
 <body>
@@ -411,11 +462,15 @@
     </div>
 
     <div class="a11y-group">
+      <button type="button" class="a11y-btn" id="topTrendsBtn" onclick="toggleTrendsView()">📈 Trends</button>
+    </div>
+
+    <div class="a11y-group">
       <button type="button" class="a11y-btn" id="guidanceBtn" onclick="openGuidanceModal()">ℹ️ Guidance</button>
     </div>
 
     <div class="a11y-group">
-      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button type="button" class="a11y-btn" id="themeBtn" onclick="toggleTheme()">🌙 Dark Mode</button>
     </div>
   </div>
 
@@ -428,7 +483,6 @@
        VIEW 1: STOCK COUNT & ORDER VIEW
        ========================================= -->
   <div id="countView">
-    <!-- Top Action Buttons -->
     <button type="button" class="btn btn-green" style="margin-bottom: 8px;" onclick="submitStockForm()">Calculate & Submit Stock Order</button>
     <button type="button" class="btn btn-teal" style="margin-bottom: 14px;" onclick="openReceiveDeliveryModal()">📦 Check Received Delivery</button>
 
@@ -447,7 +501,7 @@
       </select>
     </div>
 
-    <!-- Duplicate Order Warning Banner (shown if order placed in last 3-4 days) -->
+    <!-- Duplicate Order Warning Banner -->
     <div id="recentOrderBanner" class="recent-order-alert"></div>
 
     <div id="lockNotice" class="lock-notice">
@@ -474,14 +528,14 @@
       <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
     </div>
 
-    <!-- 1. Stock Target Baselines Section -->
+    <!-- 1. Stock Target Baselines & Site Visibility Section -->
     <div class="card" style="border-left: 6px solid var(--nhs-amber);">
-      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">🎯 Stock Target Baselines (Usage & Min)</h3>
+      <h3 style="color: var(--nhs-amber); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">🎯 Stock Target Baselines & Site Visibility</h3>
       <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
-        Adjust <strong>Average Weekly Use</strong> or <strong>Minimum Target Stock Level</strong>. Changes write directly to the <code>Usage_MinimumStock</code> tab.
+        Adjust <strong>Weekly Use</strong>, <strong>Minimum Target</strong>, and check <strong>display@</strong> to control which sites stock each item. Changes save to <code>Usage_MinimumStock</code>.
       </p>
 
-      <label for="adjustSiteSelect">Select Hospital Site to Edit:</label>
+      <label for="adjustSiteSelect">Select Hospital Site to Edit Targets For:</label>
       <select id="adjustSiteSelect" onchange="handleAdjustSiteChange(this.value)">
         <option value="">-- Choose Site --</option>
         <option value="NGH">Northern General Hospital (NGH)</option>
@@ -490,8 +544,8 @@
       </select>
 
       <div style="margin-top: 12px;">
-        <label for="adjustStaffName">Superintendent / Editor Name:</label>
-        <input type="text" id="adjustStaffName" placeholder="e.g. Lead MRI Superintendent">
+        <label for="adjustStaffName">Editor Name:</label>
+        <input type="text" id="adjustStaffName" placeholder="e.g. Your Name Here">
       </div>
     </div>
 
@@ -501,7 +555,41 @@
       <button type="button" class="btn btn-amber" onclick="submitBaselineAdjustments()">💾 Save Target Changes to Google Sheet</button>
     </div>
 
-    <!-- 2. Email & Guidance Configuration Section -->
+    <!-- 2. Add New Stock Item Card -->
+    <div class="card" style="border-left: 6px solid #10b981;">
+      <h3 style="color: #10b981; font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">➕ Add New Stock Item to Catalog</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
+        Create a new consumable or contrast item across STH sites.
+      </p>
+
+      <div style="margin-bottom: 10px;">
+        <label for="newItemName">Item Name:</label>
+        <input type="text" id="newItemName" placeholder="e.g. ProHance">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label for="newItemDesc">Description:</label>
+        <input type="text" id="newItemDesc" placeholder="e.g. 15ml Syringe">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label for="newItemPack">Pack Size:</label>
+        <input type="text" id="newItemPack" placeholder="e.g. Box of 10">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>Available At Sites (display@):</label>
+        <div class="site-vis-row">
+          <label><input type="checkbox" id="newDispNGH" checked style="width:20px; height:20px;"> NGH</label>
+          <label><input type="checkbox" id="newDispRHH" checked style="width:20px; height:20px;"> RHH</label>
+          <label><input type="checkbox" id="newDispWPH" checked style="width:20px; height:20px;"> WPH</label>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-green" style="padding:12px; font-size:1rem;" onclick="submitNewItem()">➕ Add Item to Catalog</button>
+    </div>
+
+    <!-- 3. Email & Guidance Configuration Section -->
     <div class="card" style="border-left: 6px solid var(--nhs-blue);">
       <h3 style="color: var(--nhs-blue); font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;">📧 Email & Guidance Configuration</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">
@@ -552,10 +640,66 @@
     </div>
   </div>
 
+  <!-- =========================================
+       VIEW 3: INTERACTIVE TRENDS & GRAPH VIEW
+       ========================================= -->
+  <div id="chartView">
+    <div style="margin-bottom: 12px;">
+      <button type="button" class="btn btn-secondary" onclick="switchTab('count')">← Back to Stock Count & Order</button>
+    </div>
+
+    <div class="card" style="border-left: 6px solid var(--nhs-blue);">
+      <h2 style="color: var(--nhs-blue); font-size: 1.25rem; font-weight: 900; margin-bottom: 6px;">📈 Stock Level vs. Order Trends</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px; font-weight: 700;">
+        Track historical stock levels and replenishment orders over time.
+      </p>
+
+      <div class="chart-controls-grid">
+        <div>
+          <label for="chartSiteSelect">Hospital Site:</label>
+          <select id="chartSiteSelect" onchange="updateChartFilters()">
+            <option value="NGH">NGH</option>
+            <option value="RHH">RHH</option>
+            <option value="WPH">WPH</option>
+          </select>
+        </div>
+        <div>
+          <label for="chartItemSelect">Consumable Item:</label>
+          <select id="chartItemSelect" onchange="renderStockChart()"></select>
+        </div>
+      </div>
+
+      <div class="chart-controls-grid">
+        <div>
+          <label for="chartStartDate">Start Date:</label>
+          <input type="date" id="chartStartDate" onchange="renderStockChart()">
+        </div>
+        <div>
+          <label for="chartEndDate">End Date (Default Today):</label>
+          <input type="date" id="chartEndDate" onchange="renderStockChart()">
+        </div>
+      </div>
+
+      <div class="quick-range-row">
+        <button type="button" class="quick-range-btn" onclick="applyChartQuickRange(30, this)">Last 30 Days</button>
+        <button type="button" class="quick-range-btn active" onclick="applyChartQuickRange(90, this)">Last 90 Days</button>
+        <button type="button" class="quick-range-btn" onclick="applyChartQuickRange(0, this)">All Time</button>
+      </div>
+
+      <!-- Chart Canvas Container -->
+      <div style="position: relative; width:100%; height:320px; margin-top:8px;">
+        <canvas id="stockChartCanvas"></canvas>
+      </div>
+
+      <!-- Stat Badges Below Chart -->
+      <div id="chartSummaryStats" style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
   <div id="loading" class="loader">Connecting to Google Sheet...</div>
 
   <!-- =========================================
-       VIEW 3: RESULTS VIEW
+       VIEW 4: RESULTS VIEW
        ========================================= -->
   <div id="resultView" class="card">
     <h2 style="color: var(--nhs-green); font-size: 1.35rem; margin-bottom: 6px; font-weight: 900;">Stock Ledger Updated</h2>
@@ -563,21 +707,20 @@
       Your stock levels have been saved to the ledger. Dispatch the order below:
     </p>
 
-    <!-- Specific Laminated Sheet Reminder for RHH -->
     <div id="rhhLaminatedNotice" class="card" style="display:none; background:#fef3c7; border:2px solid var(--nhs-amber); color:#92400e; padding:12px; font-weight:800; font-size:0.95rem; margin-bottom:14px;">
       📝 <strong>RHH Reminder:</strong> Please manually transfer these order quantities onto the laminated printed sheet for the Pharmacy team round.
     </div>
 
     <div id="tableContainer"></div>
 
-    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open in Email App</button>
+    <button type="button" class="btn" style="margin-top:10px;" onclick="openMailtoClient()">✉️ Open In Phone Email App</button>
     <button type="button" class="btn btn-secondary" style="margin-top:10px;" onclick="copyTableToClipboard()">📋 Copy Table for Outlook</button>
     <button type="button" class="btn btn-light-orange" style="margin-top:10px;" onclick="resetApp()">↺ Perform Another Stock Count</button>
   </div>
 </div>
 
 <!-- =========================================
-     MODAL 1: CHECK RECEIVED DELIVERY MODAL
+     MODAL 1: CHECK RECEIVED DELIVERY
      ========================================= -->
 <div id="deliveryModal" class="modal-backdrop" onclick="closeDeliveryModal(event)">
   <div class="modal-card">
@@ -628,10 +771,11 @@
 <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbx0L2auYXW6ixtiIxga0QOB4MllncpaqaVIPfTrbmJATZee-m9ZXb4OlAjhCo9d_NTjHQ/exec";
 
-  let rawStockData = { items: [], lastHistory: {}, latestOrders: {} };
+  let rawStockData = { items: [], lastHistory: {}, latestOrders: {}, timeSeries: [] };
   let currentGeneratedOrders = [];
   let currentFontPx = 16;
   let currentViewMode = "count";
+  let stockChartInstance = null;
 
   let emailSettings = {
     toEmail: "tim.jones17@nhs.net, lauren.mills6@nhs.net",
@@ -646,7 +790,273 @@
   };
 
   // ==========================================
-  // DELIVERY RECONCILIATION MODAL LOGIC
+  // CHART.JS TRENDS & GRAPH
+  // ==========================================
+  function toggleTrendsView() {
+    if (currentViewMode === "trends") {
+      switchTab("count");
+    } else {
+      switchTab("trends");
+    }
+  }
+
+  function initChartDates() {
+    const today = new Date();
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(today.getDate() - 90);
+
+    const fmt = d => d.toISOString().split('T')[0];
+    document.getElementById("chartEndDate").value = fmt(today);
+    document.getElementById("chartStartDate").value = fmt(ninetyDaysAgo);
+  }
+
+  function applyChartQuickRange(days, btn) {
+    document.querySelectorAll(".quick-range-btn").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+
+    const today = new Date();
+    const fmt = d => d.toISOString().split('T')[0];
+    document.getElementById("chartEndDate").value = fmt(today);
+
+    if (days === 0) {
+      document.getElementById("chartStartDate").value = "2020-01-01";
+    } else {
+      const past = new Date();
+      past.setDate(today.getDate() - days);
+      document.getElementById("chartStartDate").value = fmt(past);
+    }
+    renderStockChart();
+  }
+
+  function updateChartFilters() {
+    const site = document.getElementById("chartSiteSelect").value;
+    const itemSelect = document.getElementById("chartItemSelect");
+    const currentVal = itemSelect.value;
+    itemSelect.innerHTML = "";
+
+    // Show items configured for this site
+    rawStockData.items.forEach(it => {
+      if (!it.displayAt || it.displayAt[site] !== false) {
+        const opt = document.createElement("option");
+        opt.value = `${it.item}_${it.desc}`;
+        opt.innerText = `${it.item} (${it.desc})`;
+        itemSelect.appendChild(opt);
+      }
+    });
+
+    if (currentVal && Array.from(itemSelect.options).some(o => o.value === currentVal)) {
+      itemSelect.value = currentVal;
+    }
+    renderStockChart();
+  }
+
+  function renderStockChart() {
+    const site = document.getElementById("chartSiteSelect").value;
+    const itemKey = document.getElementById("chartItemSelect").value;
+    const startDateVal = document.getElementById("chartStartDate").value;
+    const endDateVal = document.getElementById("chartEndDate").value;
+
+    if (!itemKey || !rawStockData.timeSeries) return;
+
+    const startTs = startDateVal ? new Date(startDateVal + "T00:00:00").getTime() : 0;
+    const endTs = endDateVal ? new Date(endDateVal + "T23:59:59").getTime() : Infinity;
+
+    // Filter time-series by site, date range, and presence of item
+    const filteredPoints = rawStockData.timeSeries.filter(entry => {
+      if (entry.site !== site) return false;
+      if (entry.timestamp < startTs || entry.timestamp > endTs) return false;
+      return entry.records && entry.records[itemKey] !== undefined;
+    });
+
+    const labels = [];
+    const stockPoints = [];
+    const orderPoints = [];
+    let totalOrdered = 0;
+    let stockSum = 0;
+    let stockCount = 0;
+    let latestStock = "N/A";
+
+    filteredPoints.forEach(p => {
+      const rec = p.records[itemKey];
+      labels.push(p.dateStr ? p.dateStr.split(" ")[0] : "");
+      
+      if (rec.stock !== null) {
+        stockPoints.push(rec.stock);
+        stockSum += rec.stock;
+        stockCount++;
+        latestStock = rec.stock;
+      } else {
+        stockPoints.push(null);
+      }
+
+      orderPoints.push(rec.ordered || 0);
+      totalOrdered += (rec.ordered || 0);
+    });
+
+    // Lookup min target
+    const currentItemObj = rawStockData.items.find(i => `${i.item}_${i.desc}` === itemKey);
+    const minTargetVal = currentItemObj ? (currentItemObj.minTarget[site] || 0) : 0;
+
+    // Render Summary Badges
+    const statsContainer = document.getElementById("chartSummaryStats");
+    const avgStock = stockCount > 0 ? (stockSum / stockCount).toFixed(1) : "N/A";
+    statsContainer.innerHTML = `
+      <span class="badge badge-green">Latest Stock: ${latestStock}</span>
+      <span class="badge badge-blue">Min Target: ${minTargetVal}</span>
+      <span class="badge" style="background:var(--badge-bg);">Avg Stock: ${avgStock}</span>
+      <span class="badge" style="background:#fee2e2; color:#991b1b;">Total Ordered in Period: ${totalOrdered} packs</span>
+    `;
+
+    // Dark Mode Awareness for Canvas Grid/Text
+    const isDark = document.documentElement.classList.contains("dark-mode");
+    const textColor = isDark ? "#cbd5e1" : "#1f2937";
+    const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
+
+    const ctx = document.getElementById("stockChartCanvas").getContext("2d");
+    if (stockChartInstance) stockChartInstance.destroy();
+
+    stockChartInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            type: "line",
+            label: "Stock Level",
+            data: stockPoints,
+            borderColor: isDark ? "#4ade80" : "#16a34a",
+            backgroundColor: isDark ? "#4ade80" : "#16a34a",
+            borderWidth: 3,
+            tension: 0.2,
+            yAxisID: "y"
+          },
+          {
+            type: "bar",
+            label: "Packs Ordered",
+            data: orderPoints,
+            backgroundColor: isDark ? "rgba(56, 189, 248, 0.45)" : "rgba(0, 94, 184, 0.4)",
+            borderColor: isDark ? "#38bdf8" : "#005eb8",
+            borderWidth: 1.5,
+            yAxisID: "y1"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: textColor, font: { weight: "bold" } }
+          },
+          tooltip: { mode: "index", intersect: false }
+        },
+        scales: {
+          x: {
+            ticks: { color: textColor, font: { weight: "bold" } },
+            grid: { color: gridColor }
+          },
+          y: {
+            type: "linear",
+            display: true,
+            position: "left",
+            title: { display: true, text: "Stock Count", color: textColor, font: { weight: "bold" } },
+            ticks: { color: textColor },
+            grid: { color: gridColor }
+          },
+          y1: {
+            type: "linear",
+            display: true,
+            position: "right",
+            title: { display: true, text: "Packs Ordered", color: textColor, font: { weight: "bold" } },
+            ticks: { color: textColor, precision: 0 },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+  }
+
+  // ==========================================
+  // ADD & DELETE ITEM HANDLERS
+  // ==========================================
+  async function submitNewItem() {
+    const item = document.getElementById("newItemName").value.trim();
+    const desc = document.getElementById("newItemDesc").value.trim();
+    const pack = document.getElementById("newItemPack").value.trim() || "Single unit";
+
+    if (!item || !desc) {
+      alert("Please provide both an Item Name and Description.");
+      return;
+    }
+
+    const dispNGH = document.getElementById("newDispNGH").checked;
+    const dispRHH = document.getElementById("newDispRHH").checked;
+    const dispWPH = document.getElementById("newDispWPH").checked;
+
+    showLoading(true, "Adding new item to Google Sheets catalog...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "addItem",
+          item: item,
+          desc: desc,
+          pack: pack,
+          displayAt: { NGH: dispNGH, RHH: dispRHH, WPH: dispWPH }
+        })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        alert(data.message);
+        document.getElementById("newItemName").value = "";
+        document.getElementById("newItemDesc").value = "";
+        document.getElementById("newItemPack").value = "";
+        await fetchCatalog();
+      } else {
+        alert("Failed to add: " + data.message);
+      }
+    } catch(e) {
+      alert("Error adding item: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function deleteStockItem(item, desc) {
+    if (!confirm(`Are you sure you want to permanently delete '${item} (${desc})' from the catalog?`)) {
+      return;
+    }
+
+    showLoading(true, "Deleting item from Google Sheets...");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "deleteItem",
+          item: item,
+          desc: desc
+        })
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        alert(data.message);
+        await fetchCatalog();
+      } else {
+        alert("Failed to delete: " + data.message);
+      }
+    } catch(e) {
+      alert("Error deleting item: " + e.message);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // ==========================================
+  // DELIVERY RECONCILIATION MODAL
   // ==========================================
   function openReceiveDeliveryModal() {
     const currentSite = document.getElementById("siteSelect").value || "NGH";
@@ -696,7 +1106,7 @@
         <div style="flex:1;">
           <div style="font-weight:800; color:var(--nhs-blue);">${it.item}</div>
           <div style="font-size:0.85rem; color:var(--text-muted);">${it.desc} (${it.pack})</div>
-          <div style="font-size:0.85rem; font-weight:700; color:var(--nhs-amber);">Ordered: ${it.orderDisplay}</div>
+          <div style="font-size:0.85rem; font-weight:700; color:var(--nhs-amber);">Ordered: ${it.display}</div>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="font-size:0.8rem; font-weight:800;">Delivered:</span>
@@ -798,7 +1208,6 @@
       if (!isNaN(parsed)) return parsed;
     }
     if (!dateStr) return 0;
-    // Format: "19-Oct-2026 14:30"
     const m = dateStr.match(/(\d{1,2})-([A-Za-z]{3})-(\d{4})(?:\s+(\d{1,2}):(\d{1,2}))?/);
     if (!m) return 0;
     const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
@@ -820,17 +1229,8 @@
     const now = new Date().getTime();
     const diffDays = (now - orderTime) / (1000 * 60 * 60 * 24);
 
-    // If order was placed within the last 4 days
     if (diffDays >= 0 && diffDays <= 4.0) {
-      let daysText = "";
-      if (diffDays < 0.8) {
-        daysText = "earlier today";
-      } else if (diffDays < 1.8) {
-        daysText = "yesterday (1 day ago)";
-      } else {
-        daysText = `${Math.floor(diffDays)} days ago`;
-      }
-
+      let daysText = diffDays < 0.8 ? "earlier today" : diffDays < 1.8 ? "yesterday (1 day ago)" : `${Math.floor(diffDays)} days ago`;
       banner.innerHTML = `
         ⚠️ <strong>Recent Order Warning:</strong> An order for <strong>${site}</strong> was placed <strong>${daysText}</strong> on <strong>${order.date}</strong> by <strong>${order.staff}</strong>.<br>
         <span style="font-size:0.85rem;">If this order is arriving today, tap <strong>"📦 Check Received Delivery"</strong> above rather than placing a duplicate order.</span>
@@ -867,8 +1267,10 @@
     document.body.classList.toggle('dark-mode', isDark);
 
     const btn = document.getElementById('themeBtn');
-    if (btn) btn.innerText = isDark ? "☀️" : "🌙";
+    if (btn) btn.innerText = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
     try { localStorage.setItem("NHS_DARK_THEME", isDark ? "1" : "0"); } catch(e){}
+
+    if (currentViewMode === "trends") renderStockChart();
   }
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -883,10 +1285,11 @@
         document.documentElement.classList.add('dark-mode');
         document.body.classList.add('dark-mode');
         const btn = document.getElementById('themeBtn');
-        if (btn) btn.innerText = "☀️";
+        if (btn) btn.innerText = "☀️ Light Mode";
       }
     } catch(e) {}
 
+    initChartDates();
     fetchCatalog();
   });
 
@@ -936,57 +1339,47 @@
     }
   }
 
+  // ==========================================
+  // VIEW SWITCHING
+  // ==========================================
   function toggleSettingsView() {
-    if (currentViewMode === "settings") {
-      switchTab("count");
-    } else {
-      switchTab("settings");
-    }
+    switchTab(currentViewMode === "settings" ? "count" : "settings");
   }
 
   function switchTab(mode) {
     currentViewMode = mode;
     document.getElementById("resultView").style.display = "none";
+
     const settingsBtn = document.getElementById("topSettingsBtn");
+    const trendsBtn = document.getElementById("topTrendsBtn");
 
     document.getElementById("countView").style.display = (mode === "count") ? "block" : "none";
     document.getElementById("settingsView").style.display = (mode === "settings") ? "block" : "none";
+    document.getElementById("chartView").style.display = (mode === "trends") ? "block" : "none";
 
-    if (settingsBtn) {
-      if (mode === "settings") {
-        settingsBtn.classList.add("active-settings");
-      } else {
-        settingsBtn.classList.remove("active-settings");
-      }
-    }
+    if (settingsBtn) settingsBtn.classList.toggle("active-tab", mode === "settings");
+    if (trendsBtn) trendsBtn.classList.toggle("active-tab", mode === "trends");
 
     if (mode === "count") {
       renderItems();
     } else if (mode === "settings") {
       const currentSite = document.getElementById("siteSelect").value;
-      if (currentSite) {
-        document.getElementById("adjustSiteSelect").value = currentSite;
-      }
+      if (currentSite) document.getElementById("adjustSiteSelect").value = currentSite;
       renderAdjustItems();
+    } else if (mode === "trends") {
+      const currentSite = document.getElementById("siteSelect").value;
+      if (currentSite) document.getElementById("chartSiteSelect").value = currentSite;
+      updateChartFilters();
     }
   }
 
   function getEffectiveRecipients(site) {
     if (site === "RHH") {
-      return {
-        to: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net",
-        cc: ""
-      };
+      return { to: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net", cc: "" };
     } else if (site === "WPH") {
-      return {
-        to: "",
-        cc: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net"
-      };
+      return { to: "", cc: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net" };
     } else {
-      return {
-        to: emailSettings.toEmail,
-        cc: emailSettings.ccEmail
-      };
+      return { to: emailSettings.toEmail, cc: emailSettings.ccEmail };
     }
   }
 
@@ -1051,6 +1444,7 @@
     });
   }
 
+  // Render items in counting form (filtered by site visibility display@)
   function renderItems() {
     const site = document.getElementById("siteSelect").value;
     const container = document.getElementById("itemsContainer");
@@ -1059,6 +1453,11 @@
     if (!site || !rawStockData.items) return;
 
     rawStockData.items.forEach((item) => {
+      // Check display@ flag for this hospital site
+      if (item.displayAt && item.displayAt[site] === false) {
+        return; // Excluded from this site (e.g., Regadenoson/GTN at RHH/WPH)
+      }
+
       const itemName = item.item;
       const itemDesc = item.desc;
       const packSize = item.pack;
@@ -1105,6 +1504,7 @@
     filterItems();
   }
 
+  // Render items in settings (with display@ checkboxes and Delete buttons)
   function renderAdjustItems() {
     const site = document.getElementById("adjustSiteSelect").value;
     const container = document.getElementById("adjustItemsContainer");
@@ -1118,34 +1518,48 @@
 
     submitCard.style.display = "block";
 
-    rawStockData.items.forEach((item) => {
+    rawStockData.items.forEach((item, index) => {
       const itemName = item.item;
       const itemDesc = item.desc;
       const packSize = item.pack;
       const weeklyUse = item.weeklyUse[site] || 0;
       const minTarget = item.minTarget[site] || 0;
+      const disp = item.displayAt || { NGH: true, RHH: true, WPH: true };
 
       const card = document.createElement("div");
       card.className = "item-card";
       card.innerHTML = `
-        <div>
-          <div class="item-title">${itemName}</div>
-          <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="item-title">${itemName}</div>
+            <div class="item-meta">${itemDesc} • <span class="badge">${packSize}</span></div>
+          </div>
+          <button type="button" class="a11y-btn" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5; font-size:0.75rem; padding:4px 8px;" onclick="deleteStockItem('${itemName}', '${itemDesc}')">🗑️ Delete</button>
         </div>
         <div class="edit-grid">
           <div>
-            <label>Avg Weekly Use:</label>
+            <label>Avg Weekly Use (${site}):</label>
             <input type="number" step="any" min="0" class="adjust-weekly-input" 
+              id="adjust_weekly_${index}" 
               data-item="${itemName}" 
               data-desc="${itemDesc}" 
               value="${weeklyUse}">
           </div>
           <div>
-            <label>Min Target Stock:</label>
+            <label>Min Target Stock (${site}):</label>
             <input type="number" step="any" min="0" class="adjust-min-input" 
+              id="adjust_min_${index}" 
               data-item="${itemName}" 
               data-desc="${itemDesc}" 
               value="${minTarget}">
+          </div>
+        </div>
+        <div>
+          <label style="font-size:0.8rem; margin-top:4px;">Stocked at sites (display@):</label>
+          <div class="site-vis-row">
+            <label><input type="checkbox" id="disp_ngh_${index}" ${disp.NGH !== false ? "checked" : ""} style="width:18px; height:18px;"> NGH</label>
+            <label><input type="checkbox" id="disp_rhh_${index}" ${disp.RHH !== false ? "checked" : ""} style="width:18px; height:18px;"> RHH</label>
+            <label><input type="checkbox" id="disp_wph_${index}" ${disp.WPH !== false ? "checked" : ""} style="width:18px; height:18px;"> WPH</label>
           </div>
         </div>
       `;
@@ -1154,11 +1568,11 @@
   }
 
   async function saveEmailConfigToSheet() {
-    const to = document.getElementById("cfgToEmail").value.trim() || "tim.jones17@nhs.net, lauren.mills6@nhs.net";
-    const cc = document.getElementById("cfgCcEmail").value.trim() || "sth.mrisuperintendents@nhs.net";
-    const sub = document.getElementById("cfgEmailSubject").value.trim() || "IV Fluids Stock order {todays date}";
-    const body = document.getElementById("cfgEmailBody").value.trim() || "Here is this weeks order for IV Fluids for MRI:";
-    const heading = document.getElementById("cfgGuidanceHeading").value.trim() || "Stock Ordering Guidance";
+    const to = document.getElementById("cfgToEmail").value.trim() || DEFAULT_TO_EMAIL;
+    const cc = document.getElementById("cfgCcEmail").value.trim() || DEFAULT_CC_EMAIL;
+    const sub = document.getElementById("cfgEmailSubject").value.trim() || DEFAULT_EMAIL_TITLE;
+    const body = document.getElementById("cfgEmailBody").value.trim() || DEFAULT_EMAIL_MESSAGE;
+    const heading = document.getElementById("cfgGuidanceHeading").value.trim() || DEFAULT_GUIDANCE_HEADING;
     const guidanceTxt = document.getElementById("cfgGuidanceText").value.trim() || "";
 
     showLoading(true, "Saving email configuration & guidance permanently to Google Sheet...");
@@ -1206,15 +1620,23 @@
     const updates = [];
 
     for (let i = 0; i < weeklyInputs.length; i++) {
+      const itName = weeklyInputs[i].dataset.item;
+      const itDesc = weeklyInputs[i].dataset.desc;
+
+      const dispNGH = document.getElementById(`disp_ngh_${i}`) ? document.getElementById(`disp_ngh_${i}`).checked : true;
+      const dispRHH = document.getElementById(`disp_rhh_${i}`) ? document.getElementById(`disp_rhh_${i}`).checked : true;
+      const dispWPH = document.getElementById(`disp_wph_${i}`) ? document.getElementById(`disp_wph_${i}`).checked : true;
+
       updates.push({
-        item: weeklyInputs[i].dataset.item,
-        desc: weeklyInputs[i].dataset.desc,
+        item: itName,
+        desc: itDesc,
         weeklyUse: weeklyInputs[i].value,
-        minTarget: minInputs[i].value
+        minTarget: minInputs[i].value,
+        displayAt: { NGH: dispNGH, RHH: dispRHH, WPH: dispWPH }
       });
     }
 
-    if (!confirm(`Save revised Weekly Use & Min Targets for ${site}?`)) return;
+    if (!confirm(`Save revised Weekly Use, Min Targets & Site Visibility for ${site}?`)) return;
 
     showLoading(true, `Saving new baseline parameters for ${site} to Google Sheet...`);
 
@@ -1254,7 +1676,7 @@
       return; 
     }
 
-    // Duplicate Order Check (Warn if within last 4 days)
+    // Duplicate Order Guard (Check if order submitted <= 4 days ago)
     if (rawStockData.latestOrders && rawStockData.latestOrders[site]) {
       const prevOrder = rawStockData.latestOrders[site];
       const prevTime = parseOrderDateToTimestamp(prevOrder.date, prevOrder.isoDate);
@@ -1292,7 +1714,7 @@
     });
 
     if (missingInput) {
-      alert("Please enter a stock level for ALL items. If there is no stock, enter 0.");
+      alert("Please enter a stock level for all visible items at this site. If there is no stock, enter 0.");
       missingInput.focus();
       missingInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -1332,6 +1754,7 @@
   function displayResults(data) {
     document.getElementById("countView").style.display = "none";
     document.getElementById("settingsView").style.display = "none";
+    document.getElementById("chartView").style.display = "none";
     document.getElementById("resultView").style.display = "block";
 
     const site = data.site || document.getElementById("siteSelect").value;
