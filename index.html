@@ -596,17 +596,43 @@
         Saved permanently to the <code>Email_Settings</code> tab in your Google Sheet.
       </p>
 
-      <div style="margin-bottom: 10px;">
-        <label for="cfgToEmail">Primary Recipient Email (To) - Used for NGH:</label>
-        <input type="text" id="cfgToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">
-          Note: For NGH, orders are sent to these addresses. For RHH, orders are sent to sth.mrisuperintendents@nhs.net only. For WPH, the To field remains blank.
-        </span>
+      <!-- NGH Email Section -->
+      <div style="background:var(--badge-bg); border:1px solid var(--border-color); border-radius:6px; padding:10px; margin-bottom:12px;">
+        <div style="font-weight:900; color:var(--nhs-blue); margin-bottom:8px; font-size:0.95rem;">🏥 Northern General Hospital (NGH)</div>
+        <div style="margin-bottom: 8px;">
+          <label for="cfgNghToEmail" style="font-size:0.85rem;">NGH Recipient Email (To):</label>
+          <input type="text" id="cfgNghToEmail" placeholder="tim.jones17@nhs.net, lauren.mills6@nhs.net">
+        </div>
+        <div>
+          <label for="cfgNghCcEmail" style="font-size:0.85rem;">NGH Copy Email (CC):</label>
+          <input type="text" id="cfgNghCcEmail" placeholder="sth.mrisuperintendents@nhs.net">
+        </div>
       </div>
 
-      <div style="margin-bottom: 10px;">
-        <label for="cfgCcEmail">Copy Email (CC):</label>
-        <input type="text" id="cfgCcEmail" placeholder="sth.mrisuperintendents@nhs.net">
+      <!-- RHH Email Section -->
+      <div style="background:var(--badge-bg); border:1px solid var(--border-color); border-radius:6px; padding:10px; margin-bottom:12px;">
+        <div style="font-weight:900; color:var(--nhs-blue); margin-bottom:8px; font-size:0.95rem;">🏥 Royal Hallamshire Hospital (RHH)</div>
+        <div style="margin-bottom: 8px;">
+          <label for="cfgRhhToEmail" style="font-size:0.85rem;">RHH Recipient Email (To):</label>
+          <input type="text" id="cfgRhhToEmail" placeholder="sth.mrisuperintendents@nhs.net">
+        </div>
+        <div>
+          <label for="cfgRhhCcEmail" style="font-size:0.85rem;">RHH Copy Email (CC):</label>
+          <input type="text" id="cfgRhhCcEmail" placeholder="Leave blank if none">
+        </div>
+      </div>
+
+      <!-- WPH Email Section -->
+      <div style="background:var(--badge-bg); border:1px solid var(--border-color); border-radius:6px; padding:10px; margin-bottom:12px;">
+        <div style="font-weight:900; color:var(--nhs-blue); margin-bottom:8px; font-size:0.95rem;">🏥 Weston Park Hospital (WPH)</div>
+        <div style="margin-bottom: 8px;">
+          <label for="cfgWphToEmail" style="font-size:0.85rem;">WPH Recipient Email (To):</label>
+          <input type="text" id="cfgWphToEmail" placeholder="julie.smith230@nhs.net">
+        </div>
+        <div>
+          <label for="cfgWphCcEmail" style="font-size:0.85rem;">WPH Copy Email (CC):</label>
+          <input type="text" id="cfgWphCcEmail" placeholder="MRISuperintendents@sth.nhs.uk, deborah.harris22@nhs.net">
+        </div>
       </div>
 
       <div style="margin-bottom: 10px;">
@@ -623,12 +649,12 @@
       <hr style="border:0; border-top:1px dashed var(--border-color); margin: 15px 0;">
 
       <div style="margin-bottom: 10px;">
-        <label for="cfgGuidanceHeading">Guidance Heading (Sheet Cell A6):</label>
+        <label for="cfgGuidanceHeading">Guidance Heading (Sheet Cell A10):</label>
         <input type="text" id="cfgGuidanceHeading" placeholder="Stock Ordering Guidance">
       </div>
 
       <div style="margin-bottom: 12px;">
-        <label for="cfgGuidanceText">Guidance Instruction Text (Sheet Cell B6):</label>
+        <label for="cfgGuidanceText">Guidance Instruction Text (Sheet Cell B10):</label>
         <textarea id="cfgGuidanceText" rows="4" placeholder="Instructions here..."></textarea>
       </div>
 
@@ -777,15 +803,29 @@
   let currentViewMode = "count";
   let stockChartInstance = null;
 
+  const DEFAULT_NGH_TO_EMAIL = "tim.jones17@nhs.net, lauren.mills6@nhs.net";
+  const DEFAULT_NGH_CC_EMAIL = "sth.mrisuperintendents@nhs.net";
+  const DEFAULT_RHH_TO_EMAIL = "sth.mrisuperintendents@nhs.net";
+  const DEFAULT_RHH_CC_EMAIL = "";
+  const DEFAULT_WPH_TO_EMAIL = "julie.smith230@nhs.net";
+  const DEFAULT_WPH_CC_EMAIL = "MRISuperintendents@sth.nhs.uk, deborah.harris22@nhs.net";
+  const DEFAULT_EMAIL_TITLE = "IV Fluids Stock order {todays date}";
+  const DEFAULT_EMAIL_MESSAGE = "Here is this weeks order for IV Fluids for MRI:";
+  const DEFAULT_GUIDANCE_HEADING = "Stock Ordering Guidance";
+
   let emailSettings = {
-    toEmail: "tim.jones17@nhs.net, lauren.mills6@nhs.net",
-    ccEmail: "sth.mrisuperintendents@nhs.net",
-    emailSubject: "IV Fluids Stock order {todays date}",
-    emailBody: "Here is this weeks order for IV Fluids for MRI:"
+    nghToEmail: DEFAULT_NGH_TO_EMAIL,
+    nghCcEmail: DEFAULT_NGH_CC_EMAIL,
+    rhhToEmail: DEFAULT_RHH_TO_EMAIL,
+    rhhCcEmail: DEFAULT_RHH_CC_EMAIL,
+    wphToEmail: DEFAULT_WPH_TO_EMAIL,
+    wphCcEmail: DEFAULT_WPH_CC_EMAIL,
+    emailSubject: DEFAULT_EMAIL_TITLE,
+    emailBody: DEFAULT_EMAIL_MESSAGE
   };
 
   let guidanceContent = {
-    heading: "Stock Ordering Guidance",
+    heading: DEFAULT_GUIDANCE_HEADING,
     text: "Loading guidance..."
   };
 
@@ -834,7 +874,6 @@
     const currentVal = itemSelect.value;
     itemSelect.innerHTML = "";
 
-    // Show items configured for this site
     rawStockData.items.forEach(it => {
       if (!it.displayAt || it.displayAt[site] !== false) {
         const opt = document.createElement("option");
@@ -861,7 +900,6 @@
     const startTs = startDateVal ? new Date(startDateVal + "T00:00:00").getTime() : 0;
     const endTs = endDateVal ? new Date(endDateVal + "T23:59:59").getTime() : Infinity;
 
-    // Filter time-series by site, date range, and presence of item
     const filteredPoints = rawStockData.timeSeries.filter(entry => {
       if (entry.site !== site) return false;
       if (entry.timestamp < startTs || entry.timestamp > endTs) return false;
@@ -893,11 +931,9 @@
       totalOrdered += (rec.ordered || 0);
     });
 
-    // Lookup min target
     const currentItemObj = rawStockData.items.find(i => `${i.item}_${i.desc}` === itemKey);
     const minTargetVal = currentItemObj ? (currentItemObj.minTarget[site] || 0) : 0;
 
-    // Render Summary Badges
     const statsContainer = document.getElementById("chartSummaryStats");
     const avgStock = stockCount > 0 ? (stockSum / stockCount).toFixed(1) : "N/A";
     statsContainer.innerHTML = `
@@ -907,7 +943,6 @@
       <span class="badge" style="background:#fee2e2; color:#991b1b;">Total Ordered in Period: ${totalOrdered} packs</span>
     `;
 
-    // Dark Mode Awareness for Canvas Grid/Text
     const isDark = document.documentElement.classList.contains("dark-mode");
     const textColor = isDark ? "#cbd5e1" : "#1f2937";
     const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
@@ -1375,11 +1410,21 @@
 
   function getEffectiveRecipients(site) {
     if (site === "RHH") {
-      return { to: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net", cc: "" };
+      return {
+        to: emailSettings.rhhToEmail || DEFAULT_RHH_TO_EMAIL,
+        cc: emailSettings.rhhCcEmail !== undefined ? emailSettings.rhhCcEmail : DEFAULT_RHH_CC_EMAIL
+      };
     } else if (site === "WPH") {
-      return { to: "", cc: emailSettings.ccEmail || "sth.mrisuperintendents@nhs.net" };
+      return {
+        to: emailSettings.wphToEmail || DEFAULT_WPH_TO_EMAIL,
+        cc: emailSettings.wphCcEmail || DEFAULT_WPH_CC_EMAIL
+      };
     } else {
-      return { to: emailSettings.toEmail, cc: emailSettings.ccEmail };
+      // Default to NGH
+      return {
+        to: emailSettings.nghToEmail || DEFAULT_NGH_TO_EMAIL,
+        cc: emailSettings.nghCcEmail || DEFAULT_NGH_CC_EMAIL
+      };
     }
   }
 
@@ -1428,10 +1473,15 @@
   }
 
   function updateSettingsFields() {
-    document.getElementById("cfgCcEmail").value = emailSettings.ccEmail;
-    document.getElementById("cfgToEmail").value = emailSettings.toEmail;
-    document.getElementById("cfgEmailSubject").value = emailSettings.emailSubject;
-    document.getElementById("cfgEmailBody").value = emailSettings.emailBody;
+    if (document.getElementById("cfgNghToEmail")) document.getElementById("cfgNghToEmail").value = emailSettings.nghToEmail || DEFAULT_NGH_TO_EMAIL;
+    if (document.getElementById("cfgNghCcEmail")) document.getElementById("cfgNghCcEmail").value = emailSettings.nghCcEmail || DEFAULT_NGH_CC_EMAIL;
+    if (document.getElementById("cfgRhhToEmail")) document.getElementById("cfgRhhToEmail").value = emailSettings.rhhToEmail || DEFAULT_RHH_TO_EMAIL;
+    if (document.getElementById("cfgRhhCcEmail")) document.getElementById("cfgRhhCcEmail").value = emailSettings.rhhCcEmail !== undefined ? emailSettings.rhhCcEmail : DEFAULT_RHH_CC_EMAIL;
+    if (document.getElementById("cfgWphToEmail")) document.getElementById("cfgWphToEmail").value = emailSettings.wphToEmail || DEFAULT_WPH_TO_EMAIL;
+    if (document.getElementById("cfgWphCcEmail")) document.getElementById("cfgWphCcEmail").value = emailSettings.wphCcEmail || DEFAULT_WPH_CC_EMAIL;
+
+    if (document.getElementById("cfgEmailSubject")) document.getElementById("cfgEmailSubject").value = emailSettings.emailSubject || DEFAULT_EMAIL_TITLE;
+    if (document.getElementById("cfgEmailBody")) document.getElementById("cfgEmailBody").value = emailSettings.emailBody || DEFAULT_EMAIL_MESSAGE;
   }
 
   function filterItems() {
@@ -1453,9 +1503,8 @@
     if (!site || !rawStockData.items) return;
 
     rawStockData.items.forEach((item) => {
-      // Check display@ flag for this hospital site
       if (item.displayAt && item.displayAt[site] === false) {
-        return; // Excluded from this site (e.g., Regadenoson/GTN at RHH/WPH)
+        return;
       }
 
       const itemName = item.item;
@@ -1568,8 +1617,13 @@
   }
 
   async function saveEmailConfigToSheet() {
-    const to = document.getElementById("cfgToEmail").value.trim() || DEFAULT_TO_EMAIL;
-    const cc = document.getElementById("cfgCcEmail").value.trim() || DEFAULT_CC_EMAIL;
+    const nghTo = document.getElementById("cfgNghToEmail").value.trim() || DEFAULT_NGH_TO_EMAIL;
+    const nghCc = document.getElementById("cfgNghCcEmail").value.trim() || DEFAULT_NGH_CC_EMAIL;
+    const rhhTo = document.getElementById("cfgRhhToEmail").value.trim() || DEFAULT_RHH_TO_EMAIL;
+    const rhhCc = document.getElementById("cfgRhhCcEmail").value.trim();
+    const wphTo = document.getElementById("cfgWphToEmail").value.trim() || DEFAULT_WPH_TO_EMAIL;
+    const wphCc = document.getElementById("cfgWphCcEmail").value.trim() || DEFAULT_WPH_CC_EMAIL;
+
     const sub = document.getElementById("cfgEmailSubject").value.trim() || DEFAULT_EMAIL_TITLE;
     const body = document.getElementById("cfgEmailBody").value.trim() || DEFAULT_EMAIL_MESSAGE;
     const heading = document.getElementById("cfgGuidanceHeading").value.trim() || DEFAULT_GUIDANCE_HEADING;
@@ -1583,8 +1637,12 @@
         redirect: "follow",
         body: JSON.stringify({
           action: "updateEmailSettings",
-          toEmail: to,
-          ccEmail: cc,
+          nghToEmail: nghTo,
+          nghCcEmail: nghCc,
+          rhhToEmail: rhhTo,
+          rhhCcEmail: rhhCc,
+          wphToEmail: wphTo,
+          wphCcEmail: wphCc,
           emailSubject: sub,
           emailBody: body,
           guidanceHeading: heading,
@@ -1594,7 +1652,16 @@
       const data = await res.json();
 
       if (data.status === "success") {
-        emailSettings = { toEmail: to, ccEmail: cc, emailSubject: sub, emailBody: body };
+        emailSettings = {
+          nghToEmail: nghTo,
+          nghCcEmail: nghCc,
+          rhhToEmail: rhhTo,
+          rhhCcEmail: rhhCc,
+          wphToEmail: wphTo,
+          wphCcEmail: wphCc,
+          emailSubject: sub,
+          emailBody: body
+        };
         guidanceContent = { heading: heading, text: guidanceTxt };
         updateSettingsFields();
         alert(data.message);
@@ -1676,7 +1743,6 @@
       return; 
     }
 
-    // Duplicate Order Guard (Check if order submitted <= 4 days ago)
     if (rawStockData.latestOrders && rawStockData.latestOrders[site]) {
       const prevOrder = rawStockData.latestOrders[site];
       const prevTime = parseOrderDateToTimestamp(prevOrder.date, prevOrder.isoDate);
